@@ -44,14 +44,6 @@ const CONFIG = {
     },
     // RSS Feed 来源
     {
-      name: 'AI News RSS',
-      url: 'https://www.artificialintelligence-news.com/feed/',
-      category: 'agent',
-      tag: 'AI',
-      tagClass: 'tag-agent',
-      isRss: true
-    },
-    {
       name: 'TechCrunch AI',
       url: 'https://techcrunch.com/category/artificial-intelligence/feed/',
       category: 'agent',
@@ -66,10 +58,18 @@ const CONFIG = {
       tag: 'AI',
       tagClass: 'tag-agent',
       isRss: true
+    },
+    {
+      name: 'Hugging Face Blog',
+      url: 'https://huggingface.co/blog/feed.xml',
+      category: 'agent',
+      tag: 'AI',
+      tagClass: 'tag-agent',
+      isRss: true
     }
   ],
-  // 每页最多文章数
-  maxArticles: 10,
+  // 每页最多文章数（从所有来源收集更多，确保 RSS 新文章能进入排序）
+  maxArticles: 20,
   // 输出路径
   outputFile: path.join(__dirname, '..', 'index.html'),
   templateFile: path.join(__dirname, '..', 'template.html')
@@ -332,11 +332,8 @@ async function scrapeAllSources() {
     for (const article of articles) {
       if (seen.has(article.url)) continue;
       seen.add(article.url);
-      // 并发补全文章详情
       pendingEnrichments.push(enrichArticle(article));
     }
-
-    if (seen.size >= CONFIG.maxArticles) break;
   }
 
   // 等待所有文章详情加载完成
