@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Agent 前沿动态 | 2026年3月</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --bg: #f8fafc;
+            --bg-secondary: #ffffff;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 4px 24px rgba(0,0,0,0.06);
+            --shadow-hover: 0 8px 32px rgba(0,0,0,0.12);
+            --gradient-1: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-2: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --nav-bg: rgba(255,255,255,0.92);
+        }
+        [data-theme="dark"] {
+            --bg: #0f172a;
+            --bg-secondary: #1e293b;
+            --card-bg: #1e293b;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --border: rgba(255,255,255,0.08);
+            --shadow: 0 4px 24px rgba(0,0,0,0.3);
+            --shadow-hover: 0 8px 32px rgba(0,0,0,0.4);
+            --nav-bg: rgba(15,23,42,0.92);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Noto Sans SC', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            min-height: 100vh;
+            transition: background 0.4s ease, color 0.4s ease;
+        }
+
+        nav {
+            position: fixed; top: 0; left: 0; right: 0;
+            background: var(--nav-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            z-index: 1000; padding: 0 2rem;
+            transition: background 0.4s ease, border-color 0.4s ease;
+        }
+        nav .nav-inner {
+            max-width: 1200px; margin: 0 auto;
+            display: flex; align-items: center; justify-content: space-between;
+            height: 64px;
+            overflow: visible;
+        }
+        nav .logo {
+            font-size: 1.3rem; font-weight: 700;
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: flex; align-items: center; gap: 0.5rem;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        nav .logo-icon {
+            width: 32px; height: 32px;
+            background: var(--gradient-1);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem;
+            -webkit-background-clip: unset;
+            -webkit-text-fill-color: white;
+        }
+        .theme-toggle {
+            display: flex; align-items: center; gap: 0.5rem;
+            padding: 0.4rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .theme-toggle:hover { border-color: var(--primary); transform: scale(1.05); }
+        .theme-toggle .sun, .theme-toggle .moon {
+            width: 32px; height: 32px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem; transition: all 0.3s ease;
+        }
+        .theme-toggle .sun { background: var(--primary); color: white; }
+        .theme-toggle .moon { background: var(--bg); color: var(--text-muted); }
+        [data-theme="dark"] .theme-toggle .sun { background: var(--bg); color: var(--text-muted); }
+        [data-theme="dark"] .theme-toggle .moon { background: var(--primary); color: white; }
+
+        /* Hero */
+        .hero {
+            padding: 130px 2rem 50px;
+            text-align: center;
+        }
+        .hero-inner { max-width: 720px; margin: 0 auto; }
+        .hero .pill {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            background: var(--bg-secondary); border: 1px solid var(--border);
+            padding: 0.4rem 1rem; border-radius: 50px;
+            font-size: 0.8rem; color: var(--primary); font-weight: 600;
+            margin-bottom: 1.5rem;
+            transition: background 0.4s ease, border-color 0.4s ease;
+        }
+        .hero h1 {
+            font-size: 2.8rem; font-weight: 700; margin-bottom: 1rem;
+            background: var(--gradient-1);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text; line-height: 1.3;
+            padding-bottom: 0.1em;
+        }
+        .hero p { font-size: 1.05rem; color: var(--text-muted); max-width: 500px; margin: 0 auto; }
+
+        .hero-stats {
+            display: flex; justify-content: center; gap: 3rem;
+            margin-top: 2.5rem; padding-top: 2rem;
+            border-top: 1px solid var(--border);
+            transition: border-color 0.4s ease;
+        }
+        .hero-stats .stat-item { text-align: center; }
+        .hero-stats .stat-num {
+            font-size: 1.8rem; font-weight: 700;
+            background: var(--gradient-1);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero-stats .stat-label { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem; }
+
+        /* Categories */
+        .categories {
+            display: flex; justify-content: center; gap: 0.6rem;
+            flex-wrap: wrap;
+            padding: 0 2rem 2.5rem;
+            max-width: 1200px; margin: 0 auto;
+        }
+        .category-btn {
+            display: flex; align-items: center; gap: 0.4rem;
+            padding: 0.5rem 1.1rem; border-radius: 50px;
+            border: 1.5px solid var(--border);
+            background: var(--bg-secondary); color: var(--text-muted);
+            cursor: pointer; font-size: 0.88rem; font-family: inherit;
+            font-weight: 500; transition: all 0.25s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+        .category-btn:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-2px); }
+        .category-btn.active { background: var(--primary); border-color: var(--primary); color: white; box-shadow: 0 4px 20px rgba(99,102,241,0.4); transform: translateY(-2px); }
+        .category-btn .count {
+            display: inline-flex; align-items: center; justify-content: center;
+            min-width: 20px; height: 20px; padding: 0 0.35rem;
+            background: rgba(255,255,255,0.2); border-radius: 50px;
+            font-size: 0.72rem; font-weight: 600;
+        }
+        .category-btn.active .count { background: rgba(255,255,255,0.25); }
+        .category-btn:not(.active):hover .count { background: rgba(99,102,241,0.1); color: var(--primary); }
+
+        /* Main */
+        main { max-width: 1200px; margin: 0 auto; padding: 0 2rem 4rem; }
+
+        /* Article list */
+        .article-list { display: flex; flex-direction: column; gap: 1.25rem; }
+
+        .article-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            display: flex;
+            transition: transform 0.3s ease, box-shadow 0.3s ease,
+                        background 0.4s ease, border-color 0.4s ease;
+            cursor: pointer;
+        }
+        .article-card:hover {
+            transform: translateX(4px);
+            box-shadow: var(--shadow-hover);
+        }
+        .article-card.hidden { display: none; }
+
+        .article-card .card-thumb {
+            width: 220px; min-height: 180px;
+            position: relative; overflow: hidden; flex-shrink: 0;
+        }
+        .article-card .card-thumb img {
+            width: 100%; height: 100%; object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+        .article-card:hover .card-thumb img { transform: scale(1.06); }
+
+        .article-card .card-content {
+            padding: 1.4rem 1.6rem;
+            display: flex; flex-direction: column; justify-content: center;
+            flex: 1;
+        }
+        .article-card .card-tag {
+            display: inline-block;
+            padding: 0.25rem 0.7rem; border-radius: 50px;
+            font-size: 0.7rem; font-weight: 600;
+            letter-spacing: 0.3px; color: white;
+            margin-bottom: 0.75rem; width: fit-content;
+        }
+        .tag-agent { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
+        .tag-physical { background: linear-gradient(135deg, #10b981, #059669); }
+        .tag-automation { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .tag-research { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+        .tag-finance { background: linear-gradient(135deg, #ec4899, #db2777); }
+        .tag-vehicles { background: linear-gradient(135deg, #14b8a6, #0d9488); }
+
+        .article-card .card-title {
+            font-size: 1.1rem; font-weight: 600;
+            margin-bottom: 0.6rem; line-height: 1.45;
+            color: var(--text); transition: color 0.4s ease;
+        }
+        .article-card:hover .card-title { color: var(--primary); }
+        .article-card .card-title a { color: inherit; text-decoration: none; }
+
+        .article-card .card-desc {
+            color: var(--text-muted); font-size: 0.88rem;
+            display: -webkit-box; -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical; overflow: hidden;
+            transition: color 0.4s ease;
+        }
+        .article-card .card-meta {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-top: 1rem; padding-top: 0.8rem;
+            border-top: 1px solid var(--border);
+            transition: border-color 0.4s ease;
+        }
+        .article-card .card-source {
+            display: flex; align-items: center; gap: 0.5rem;
+            color: var(--text-muted); font-size: 0.8rem;
+        }
+        .article-card .card-source .icon {
+            width: 20px; height: 20px; border-radius: 5px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 10px; color: white; font-weight: 700;
+        }
+        .article-card .card-date { color: var(--text-muted); font-size: 0.78rem; }
+
+        /* Featured card */
+        .featured-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 20px; overflow: hidden;
+            display: flex; margin-bottom: 2rem;
+            transition: background 0.4s ease, border-color 0.4s ease;
+        }
+        .featured-card.hidden { display: none; }
+        .featured-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-3px); }
+        .featured-card .card-thumb {
+            width: 45%; min-height: 300px;
+            position: relative; overflow: hidden;
+        }
+        .featured-card .card-thumb img {
+            width: 100%; height: 100%; object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+        .featured-card:hover .card-thumb img { transform: scale(1.05); }
+        .featured-card .card-content {
+            flex: 1; padding: 2rem 2.2rem;
+            display: flex; flex-direction: column; justify-content: center;
+        }
+        .featured-card .featured-label {
+            font-size: 0.72rem; font-weight: 700; letter-spacing: 1px;
+            text-transform: uppercase; color: var(--primary);
+            margin-bottom: 0.8rem;
+        }
+        .featured-card .card-title {
+            font-size: 1.6rem; font-weight: 700;
+            margin-bottom: 1rem; line-height: 1.3;
+            color: var(--text); transition: color 0.4s ease;
+        }
+        .featured-card:hover .card-title { color: var(--primary); }
+        .featured-card .card-title a { color: inherit; text-decoration: none; }
+        .featured-card .card-desc {
+            color: var(--text-muted); font-size: 0.95rem;
+            line-height: 1.7; margin-bottom: 1.5rem;
+            transition: color 0.4s ease;
+        }
+        .featured-card .card-footer {
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .featured-card .card-source {
+            display: flex; align-items: center; gap: 0.5rem;
+            color: var(--text-muted); font-size: 0.82rem;
+        }
+        .featured-card .card-source .icon {
+            width: 22px; height: 22px; border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; color: white; font-weight: 700;
+        }
+        .read-btn {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            padding: 0.5rem 1.2rem; border-radius: 50px;
+            background: var(--primary); color: white;
+            font-size: 0.85rem; font-weight: 500;
+            text-decoration: none; transition: all 0.3s ease;
+        }
+        .read-btn:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(99,102,241,0.4); }
+
+        /* Source note */
+        .source-note {
+            text-align: center; padding: 2rem;
+            color: var(--text-muted); font-size: 0.82rem;
+            border-top: 1px solid var(--border); margin-top: 2.5rem;
+            transition: border-color 0.4s ease;
+        }
+        .source-note a { color: var(--primary); text-decoration: none; }
+
+        footer {
+            text-align: center; padding: 2rem;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted); font-size: 0.8rem;
+            transition: border-color 0.4s ease;
+        }
+        footer a { color: var(--primary); text-decoration: none; }
+
+        /* Progress bar */
+        .progress-bar {
+            position: fixed; top: 64px; left: 0; height: 3px;
+            background: var(--gradient-1); z-index: 999;
+            transition: width 0.1s;
+        }
+
+        /* Empty state */
+        .empty-state { display: none; text-align: center; padding: 4rem; color: var(--text-muted); }
+        .empty-state .empty-icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+        /* Anim */
+        @keyframes fadeInRight {
+            from { opacity: 0; transform: translateX(-12px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .article-card { animation: fadeInRight 0.4s ease forwards; }
+        .article-card:nth-child(1) { animation-delay: 0.05s; }
+        .article-card:nth-child(2) { animation-delay: 0.1s; }
+        .article-card:nth-child(3) { animation-delay: 0.15s; }
+        .article-card:nth-child(4) { animation-delay: 0.2s; }
+        .article-card:nth-child(5) { animation-delay: 0.25s; }
+        .article-card:nth-child(6) { animation-delay: 0.3s; }
+        .article-card:nth-child(7) { animation-delay: 0.35s; }
+        .article-card:nth-child(8) { animation-delay: 0.4s; }
+        .article-card:nth-child(9) { animation-delay: 0.45s; }
+        .article-card:nth-child(10) { animation-delay: 0.5s; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .featured-card { flex-direction: column; }
+            .featured-card .card-thumb { width: 100%; min-height: 200px; }
+            .article-card { flex-direction: column; }
+            .article-card .card-thumb { width: 100%; min-height: 160px; }
+            .hero h1 { font-size: 2rem; }
+            .hero-stats { gap: 1.5rem; }
+            .hero-stats .stat-num { font-size: 1.4rem; }
+        }
+    </style>
+</head>
+<body data-theme="light">
+
+    <div class="progress-bar" id="progressBar"></div>
+
+    <nav>
+        <div class="nav-inner">
+            <div class="logo">
+                <span class="logo-icon">🤖</span>
+                AI Agent 前沿
+            </div>
+            <div class="theme-toggle" onclick="toggleTheme()">
+                <div class="sun">☀️</div>
+                <div class="moon">🌙</div>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-inner">
+            <div class="pill">🧠 专注 · AI Agent 与 Physical AI 前沿</div>
+            <h1>AI Agent 本周动态</h1>
+            <p>追踪 AI Agent、具身智能、多智能体系统的最新进展与行业应用</p>
+            <div class="hero-stats">
+                <div class="stat-item">
+                    <div class="stat-num">10</div>
+                    <div class="stat-label">篇精选文章</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-num">5</div>
+                    <div class="stat-label">个主题方向</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-num">2026.03</div>
+                    <div class="stat-label">本月动态</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="categories">
+        <button class="category-btn active" onclick="filterNews('all')">全部 <span class="count">10</span></button>
+        <button class="category-btn" onclick="filterNews('agent')">Agent <span class="count">3</span></button>
+        <button class="category-btn" onclick="filterNews('physical')">具身智能 <span class="count">4</span></button>
+        <button class="category-btn" onclick="filterNews('automation')">自动化 <span class="count">2</span></button>
+        <button class="category-btn" onclick="filterNews('research')">研究 <span class="count">1</span></button>
+        <button class="category-btn" onclick="filterNews('finance')">金融 <span class="count">1</span></button>
+    </div>
+
+    <main>
+        <!-- Featured -->
+        <div class="featured-card" data-category="agent" id="featured">
+            <div class="card-thumb">
+                <img src="https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&q=80" alt="OpenAI Frontier">
+                <div class="overlay" style="position:absolute;inset:0;background:linear-gradient(to right,rgba(0,0,0,0.3),transparent)"></div>
+            </div>
+            <div class="card-content">
+                <div class="featured-label">⭐ 重点关注</div>
+                <h2 class="card-title">
+                    <a href="https://www.artificialintelligence-news.com/news/openai-frontier-enterprise-ai-agents-saas/" target="_blank">OpenAI Frontier 入局：AI Agent 引发 SaaS 行业大洗牌</a>
+                </h2>
+                <p class="card-desc">OpenAI 正式推出 Frontier 企业级 AI Agent 服务，直指 SaaS 核心市场。这不仅是产品发布，更是一场关于"AI 原生应用"与"传统软件"谁将主导企业软件市场的宣战。传统 SaaS 厂商面临被迫转型或被淘汰的压力。</p>
+                <div class="card-footer">
+                    <div class="card-source">
+                        <span class="icon" style="background:#10a37f">O</span>
+                        artificialintelligence-news.com · 03.16
+                    </div>
+                    <a href="https://www.artificialintelligence-news.com/news/openai-frontier-enterprise-ai-agents-saas/" target="_blank" class="read-btn">
+                        阅读原文 →
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Article list -->
+        <div class="article-list" id="articleList">
+
+            <div class="article-card" data-category="physical">
+                <div class="card-thumb">
+                    <img src="https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=400&q=80" alt="BMW Robots">
+                </div>
+                <div class="card-content">
+                    <span class="card-tag tag-physical">具身智能</span>
+                    <h3 class="card-title">
+                        <a href="https://www.artificialintelligence-news.com/news/bmw-humanoid-robots-manufacturing-europe-leipzig/" target="_blank">宝马在德国工厂部署人形机器人，欧洲制造业震动</a>
+                    </h3>
+                    <p class="card-desc">宝马莱比锡工厂正式部署人形机器人从事精密装配，这是欧洲首次大规模将人形机器人引入汽车制造产线。ABB、NVIDIA 等工业 AI 巨头正争相布局这一赛道。</p>
+                    <div class="card-meta">
+                        <div class="card-source">
+                            <span class="icon" style="background:#1e3a5f">B</span>
+                            artificialintelligence-news.com
+                        </div>
+                        <span class="card-date">03.13</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="article-card" data-category="agent">
+                <div class="card-thumb">
+                    <img src="https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=400&q=80" alt="Multi-agent">
+                </div>
+                <div class="card-content">
+                    <span class="card-tag tag-agent">多智能体</span>
+                    <h3 class="card-title">
+                        <a href="https://www.artificialintelligence-news.com/news/how-multi-agent-ai-economics-business-automation/" target="_blank">多 Agent 经济真相：协调成本决定自动化成败</a>
+                    </h3>
+                    <p class="card-desc">多 Agent 系统如何影响企业自动化工作流的经济性？新研究表明，管理多个 AI Agent 的协调成本正成为决定业务自动化是否可行的关键变量。</p>
+                    <div class="card-meta">
+                        <div class="card-source">
+                            <span class="icon" style="background:#7c3aed">AI</span>
+                            artificialintelligence-news.com
+                        </div>
+                        <span class="card-date">03.12</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="article-card" data-category="physical">
+                <div class="card-thumb">
+                    <img src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400&q=80" alt="AI2 Physical AI">
+                </div>
+                <div class="card-content">
+                    <span class="card-tag tag-physical">具身智能</span>
+                    <h3 class="card-title">
+                        <a href="https://www.artificialintelligence-news.com/news/ai2-building-physical-ai-with-virtual-simulation-data/" target="_blank">AI2 用虚拟仿真数据撬动物理世界 AI 变革</a>
+                    </h3>
+                    <p class="card-desc">AI2 推出 MolmoBot 项目，展示了虚拟仿真数据如何驱动具身智能在真实物理环境中的部署效率，工厂自动化正在被重新定义。</p>
+                    <div class="card-meta">
+                        <div class="card-source">
+                            <span class="icon" style="background:#3b82f6">AI²</span>
+                            artificialintelligence-news.com
+                        </div>
+                        <span class="card-date">03.11</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="article-card" data-category="physical">
+                <div class="card-thumb">
+                    <img src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=400&q=80" alt="ABB NVIDIA">
+                </div>
+                <div class="card-content">
+                    <span class="card-tag tag-physical">具身智能</span>
+                    <h3 class="card-title">
+                        <a href="https://www.artificialintelligence-news.com/news/abb-physical-ai-simulation-secures-factory-automation-roi/" target="_blank">ABB × NVIDIA：用物理 AI 仿真为工厂自动化带来真实 ROI</a>
+                    </h3>
+                    <p class="card-desc">ABB 与 NVIDIA 合作，通过物理 AI 仿真技术解决工厂自动化中的实际生产障碍，具身智能正在从实验室走向工业现场，带来可量化的回报。</p>
+                    <div class="card-meta">
+                        <div class="card-source">
+                            <span class="icon" style="background:#76b900">ABB</span>
+                            artificialintelligence-news.com
+                        </div>
+                        <span class="card-date">03.10</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="article-card" data-category="automation">
+                <div class="card-thumb">
+                    <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&q=80" alt="Agentic AI Finance">
+                </div>
+                <div class="card-content">
+                    <span class="card-tag tag-automation">自动化</span>
+                    <h3 class="card-title">
+                        <a href="https://www.artificialintelligence-news.com/news/agentic-ai-in-finance-speeds-up-operational-automation/" target="_blank">Agentic AI 在金融领域提速运营自动化</a>
+                    </h3>
+                    <p class="card-desc">金融业通过引入 Agentic AI 实现运营自动化提速，但要真正释放价值，需要以数据为核心的基础设施支撑。金融机构正在重新评估其数据架构。</p>
+                    <div class="card-meta">
+                        <div class="card-source">
+                            <span class="icon" style="background:#ec4899">💰</span>
+                            artificialintelligence-news.com
+                        </div>
+                        <span class="card-date">03.10</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="article-card" data-category="agent">
+                <div class="card-thumb">
+                    <img src="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400&q=80" alt="NVIDIA Agent Toolkit">
+                </div>
+                <div class="card-content">
+                    <span class="card-tag tag-agent">Agent</span>
+                    <h3 class="card-title">
+                        <a href="https://www.artificialintelligence-news.com/news/nvidia-agent-toolkit-enterprise-ai-agents/" target="_blank">NVIDIA Agent Toolkit：让企业 AI Agent 安全落地</a>
+                    </h3>
+                    <p class="card-desc">NVIDIA 发布企业级 Agent Toolkit，聚焦身份验证、权限控制、审计追踪等安全需求，降低企业大规模部署 AI Agent 的合规门槛。</p>
+                    <div class="card-meta">
+                        <div class="card-source">
+                            <span class="icon" style="background:#76b900">N</span>
+                            artificialintelligence-news.com
+                        </div>
+                        <span class="card-date">03.19</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="article-card" data-category="automation">
+                <div class="card-thumb">
+                    <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&q=80" alt="Scaling Automation">
+                </div>
+                <div class="card-content">
+                    <span class="card-tag tag-automation">自动化</span>
+                    <h3 class="card-title">
+                        <a href="https://www.artificialintelligence-news.com/news/scaling-intelligent-automation-without-breaking-live-workflows/" target="_blank">规模化智能自动化：如何在不中断生产的前提下扩展</a>
+                    </h3>
+                    <p class="card-desc">在不影响现有工作流的前提下扩展智能自动化，需要的不是堆砌更多机器人，而是弹性架构思维。多家企业已在真实生产环境中验证了这条路。</p>
+                    <div class="card-meta">
+                        <div class="card-source">
+                            <span class="icon" style="background:#8b5cf6">⚙</span>
+                            artificialintelligence-news.com
+                        </div>
+                        <span class="card-date">03.06</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="article-card" data-category="research">
+                <div class="card-thumb">
+                    <img src="https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=400&q=80" alt="Physical AI">
+                </div>
+                <div class="card-content">
+                    <span class="card-tag tag-research">研究</span>
+                    <h3 class="card-title">
+                        <a href="https://www.artificialintelligence-news.com/news/physical-ai-global-race-robots-manufacturing-2026/" target="_blank">Physical AI 时刻已至：全球机器人竞争进入白热化</a>
+                    </h3>
+                    <p class="card-desc">Boston Dynamics Atlas 获 CES 最佳机器人奖，Figure 02 量产，Figure AI 估值飙升——具身智能正从技术展示走向商业化，全球竞争格局急剧升温。</p>
+                    <div class="card-meta">
+                        <div class="card-source">
+                            <span class="icon" style="background:#f59e0b">BD</span>
+                            artificialintelligence-news.com
+                        </div>
+                        <span class="card-date">03.04</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="article-card" data-category="finance">
+                <div class="card-thumb">
+                    <img src="https://images.unsplash.com/photo-1563986768609-322da13575f3?w=400&q=80" alt="AI Agents Finance">
+                </div>
+                <div class="card-content">
+                    <span class="card-tag tag-finance">金融</span>
+                    <h3 class="card-title">
+                        <a href="https://www.artificialintelligence-news.com/news/visa-prepares-payment-systems-for-ai-agent-initiated-transactions/" target="_blank">Visa 备战 AI Agent 主导演交易时代</a>
+                    </h3>
+                    <p class="card-desc">AI Agent 直接发起商业支付交易的时代即将来临，Visa 已开始布局可编程支付基础设施，应对 AI 主导的电商和金融新秩序。</p>
+                    <div class="card-meta">
+                        <div class="card-source">
+                            <span class="icon" style="background:#1a1f71">V</span>
+                            artificialintelligence-news.com
+                        </div>
+                        <span class="card-date">03.19</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="article-card" data-category="physical">
+                <div class="card-thumb">
+                    <img src="https://images.unsplash.com/photo-1507146153580-69a1fe6d8aa1?w=400&q=80" alt="Dangerous Robots">
+                </div>
+                <div class="card-content">
+                    <span class="card-tag tag-physical">具身智能</span>
+                    <h3 class="card-title">
+                        <a href="https://www.artificialintelligence-news.com/news/new-partnership-to-offer-ai-for-robotics-for-work-in-dangerous-environments/" target="_blank">新合作：用智能机器人替代高危环境人工作业</a>
+                    </h3>
+                    <p class="card-desc">能源、采矿、危化等行业正通过智能机器人实现高危作业替代，减少人员伤亡的同时提升生产效率，多家企业已签订正式合作协议。</p>
+                    <div class="card-meta">
+                        <div class="card-source">
+                            <span class="icon" style="background:#14b8a6">🤖</span>
+                            artificialintelligence-news.com
+                        </div>
+                        <span class="card-date">03.11</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="source-note">
+            📡 数据来源：<a href="https://www.artificialintelligence-news.com/" target="_blank">artificialintelligence-news.com</a> · 
+            抓取时间：2026年3月21日 · 覆盖范围：2026年3月4日-19日
+        </div>
+
+        <div id="emptyState" class="empty-state">
+            <div class="empty-icon">🔍</div>
+            <p>该分类下暂无文章</p>
+        </div>
+    </main>
+
+    <footer>
+        <p>AI Agent 前沿动态 | 数据来源：artificialintelligence-news.com</p>
+    </footer>
+
+    <script>
+        function toggleTheme() {
+            const body = document.body;
+            const current = body.getAttribute('data-theme');
+            body.setAttribute('data-theme', current === 'light' ? 'dark' : 'light');
+            localStorage.setItem('ai-news-theme', body.getAttribute('data-theme'));
+        }
+        (function() {
+            const saved = localStorage.getItem('ai-news-theme');
+            if (saved) {
+                document.body.setAttribute('data-theme', saved);
+            } else {
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                document.body.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+            }
+        })();
+
+        function filterNews(category) {
+            document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.closest('.category-btn').classList.add('active');
+
+            const featured = document.getElementById('featured');
+            const list = document.getElementById('articleList');
+            const emptyState = document.getElementById('emptyState');
+
+            // Featured: only show for "all"
+            if (category === 'all') {
+                featured.style.display = 'flex';
+            } else {
+                featured.style.display = 'none';
+            }
+
+            const cards = list.querySelectorAll('.article-card');
+            let visibleCount = 0;
+
+            cards.forEach((card, index) => {
+                const show = category === 'all' || card.dataset.category === category;
+                if (show) {
+                    visibleCount++;
+                    if (card.style.display === 'none') {
+                        card.style.display = 'flex';
+                        card.style.animation = 'none';
+                        card.offsetHeight;
+                        card.style.opacity = '0';
+                        card.style.transform = 'translateX(-12px)';
+                        requestAnimationFrame(() => {
+                            card.style.animation = `fadeInRight 0.4s ease ${index * 0.05}s forwards`;
+                        });
+                    }
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            emptyState.style.display = visibleCount === 0 ? 'block' : 'none';
+        }
+
+        window.addEventListener('scroll', () => {
+            const scrollTop = document.documentElement.scrollTop;
+            const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+            document.getElementById('progressBar').style.width = (scrollTop / scrollHeight * 100) + '%';
+        });
+
+        document.querySelectorAll('.article-card, .featured-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const link = card.querySelector('a');
+                if (link) window.open(link.href, '_blank');
+            });
+        });
+    </script>
+</body>
+</html>

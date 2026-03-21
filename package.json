@@ -1,0 +1,20 @@
+{
+  "name": "ai-agent-weekly",
+  "version": "1.0.0",
+  "description": "AI Agent 前沿动态 — 每日自动更新的资讯网站",
+  "main": "scripts/scrape.js",
+  "scripts": {
+    "scrape": "node scripts/scrape.js",
+    "preview": "node scripts/scrape.js && echo 'HTML generated, open index.html in browser'",
+    "test": "node scripts/scrape.js --dry-run"
+  },
+  "keywords": ["ai-agent", "news", "github-actions", "puppeteer"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.6.0",
+    "cheerio": "^1.0.0",
+    "turndown": "^7.1.0",
+    "dotenv": "^16.3.0"
+  }
+}

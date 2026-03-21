@@ -1,0 +1,87 @@
+name: Daily AI Agent News Update
+
+on:
+  # 每天北京时间 08:00 自动运行
+  schedule:
+    - cron: '0 0 * * *'
+
+  # 支持手动触发（GitHub 网页上操作）
+  workflow_dispatch:
+
+  # 每当有代码推送时也触发
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-news:
+    name: 抓取新闻并更新页面
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 运行抓取脚本
+        run: npm run scrape
+        env:
+          # 如需付费 API，可在此处配置（secrets 设置）
+          # BRAVE_API_KEY: ${{ secrets.BRAVE_API_KEY }}
+
+      - name: 检查是否有变更
+        id: check_changes
+        run: |
+          if git diff --stat | grep -q "index.html"; then
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "📰 发现新闻更新，准备推送..."
+          else
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "✅ 没有新内容，无需推送"
+          fi
+
+      - name: 提交并推送更新
+        if: steps.check_changes.outputs.has_changes == 'true'
+        run: |
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # 获取今天日期作为提交信息
+          COMMIT_MSG="📰 Auto-update: $(date +'%Y-%m-%d')"
+          
+          git add index.html
+          git commit -m "$COMMIT_MSG"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 上传构建产物
+        if: steps.check_changes.outputs.has_changes == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: generated-html
+          path: index.html
+          retention-days: 7
+
+      - name: 发布日期摘要
+        if: steps.check_changes.outputs.has_changes == 'true'
+        run: |
+          echo "🎉 今日新闻更新已推送！"
+          echo "📅 更新日期: $(date +'%Y-%m-%d %H:%M:%S')"
+          echo "🌐 访问: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
