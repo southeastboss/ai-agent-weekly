@@ -66,3 +66,26 @@ jobs:
           name: generated-html
           path: index.html
           retention-days: 7
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          MSG="❌ ai-agent-weekly 更新失败！请检查日志。"
+          curl -s "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d "chat_id=${TELEGRAM_CHAT_ID}" \
+            -d "text=${MSG}" \
+            || true
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+
+      - name: Notify on success
+        if: success() && steps.check_changes.outputs.has_changes == 'true'
+        run: |
+          curl -s "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d "chat_id=${TELEGRAM_CHAT_ID}" \
+            -d "text=✅ ai-agent-weekly 更新成功 $(date +'%Y-%m-%d %H:%M')" \
+            || true
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}

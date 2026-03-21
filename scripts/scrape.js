@@ -18,8 +18,9 @@ const { execFileSync } = require('child_process');
 
 // ─── 配置 ───────────────────────────────────────────────────────────────
 const CONFIG = {
-  // 目标新闻分类页面（AI Agent / Physical AI 相关）
+  // 目标新闻来源（分类页 或 RSS Feed）
   sources: [
+    // 分类页来源
     {
       name: 'AI and Us',
       url: 'https://www.artificialintelligence-news.com/categories/ai-and-us/',
@@ -40,6 +41,31 @@ const CONFIG = {
       category: 'agent',
       tag: 'Agent',
       tagClass: 'tag-agent'
+    },
+    // RSS Feed 来源
+    {
+      name: 'AI News RSS',
+      url: 'https://www.artificialintelligence-news.com/feed/',
+      category: 'agent',
+      tag: 'AI',
+      tagClass: 'tag-agent',
+      isRss: true
+    },
+    {
+      name: 'TechCrunch AI',
+      url: 'https://techcrunch.com/category/artificial-intelligence/feed/',
+      category: 'agent',
+      tag: 'AI',
+      tagClass: 'tag-agent',
+      isRss: true
+    },
+    {
+      name: 'VentureBeat AI',
+      url: 'https://venturebeat.com/category/ai/feed/',
+      category: 'agent',
+      tag: 'AI',
+      tagClass: 'tag-agent',
+      isRss: true
     }
   ],
   // 每页最多文章数
@@ -77,7 +103,28 @@ function fetchPageWithCurl(url) {
 }
 
 /**
- * 抓取单个页面
+ * 抓取原始文本（不经过 cheerio，用于 RSS XML）
+ */
+function fetchRawWithCurl(url) {
+  const curlBin = process.platform === 'win32' ? 'curl.exe' : 'curl';
+  const args = [
+    '-L',
+    '-A',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+    '--max-time',
+    '30',
+    '--silent',
+    url,
+  ];
+
+  return execFileSync(curlBin, args, {
+    encoding: 'utf8',
+    maxBuffer: 10 * 1024 * 1024,
+  });
+}
+
+/**
+ * 抓取单个页面（返回 cheerio 对象）
  */
 async function fetchPage(url) {
   try {
@@ -104,9 +151,60 @@ async function fetchPage(url) {
 }
 
 /**
+ * 从 RSS Feed 提取文章数据（使用正则解析，不依赖 XML 库）
+ */
+function extractRssArticles(rssText, source) {
+  const articles = [];
+  // 匹配 <item>...</item> 或 <entry>...</entry>
+  const itemRegex = /<(?:item|entry)>([\s\S]*?)<\/(?:item|entry)>/gi;
+  let match;
+
+  while ((match = itemRegex.exec(rssText)) !== null && articles.length < CONFIG.maxArticles) {
+    const itemXml = match[1];
+
+    // 提取 title
+    const titleMatch = /<title[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/title>/i.exec(itemXml);
+    const title = titleMatch ? titleMatch[1].replace(/<!\[CDATA\[|\]\]>/g, '').trim() : '';
+
+    // 提取 link
+    const linkMatch = /<link[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/link>/i.exec(itemXml);
+    let link = linkMatch ? linkMatch[1].replace(/<!\[CDATA\[|\]\]>/g, '').trim() : '';
+    // link 可能在 <link href="..."> 格式中
+    if (!link) {
+      const hrefMatch = /<link[^>]+href=["']([^"']+)["'][^>]*>/i.exec(itemXml);
+      link = hrefMatch ? hrefMatch[1].trim() : '';
+    }
+
+    // 提取发布日期
+    const dateMatch = /<(?:pubDate|published|updated|dc:date)[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/(?:pubDate|published|updated|dc:date)>/i.exec(itemXml);
+    let date = '';
+    if (dateMatch) {
+      const parsed = new Date(dateMatch[1].replace(/<!\[CDATA\[|\]\]>/g, '').trim());
+      if (!isNaN(parsed)) date = parsed.toISOString().substring(0, 10);
+    }
+
+    // 提取描述
+    const descMatch = /<(?:description|summary|content)[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/(?:description|summary|content)>/i.exec(itemXml);
+    const description = descMatch
+      ? descMatch[1].replace(/<!\[CDATA\[|\]\]>/g, '').replace(/<[^>]+>/g, '').trim().substring(0, 200)
+      : '';
+
+    if (title && link) {
+      articles.push({ title, url: link, date, description, sourceCategory: source.category, tag: source.tag, tagClass: source.tagClass });
+    }
+  }
+
+  return articles;
+}
+
+/**
  * 从页面提取文章数据
  */
-function extractArticles($, source) {
+function extractArticles($, source, rssText) {
+  // 如果是 RSS 来源
+  if (source.isRss) {
+    return extractRssArticles(rssText || $.html(), source);
+  }
   const articles = [];
   const seen = new Set();
 
@@ -208,25 +306,44 @@ async function enrichArticle(article) {
 async function scrapeAllSources() {
   const allArticles = [];
   const seen = new Set();
+  const pendingEnrichments = [];
 
   for (const source of CONFIG.sources) {
     console.log(`\n📡 正在抓取: ${source.name}`);
-    const $ = await fetchPage(source.url);
     
-    if ($) {
-      const articles = extractArticles($, source);
-      console.log(`   📰 分类页抽取到 ${articles.length} 篇文章`);
-
-      for (const article of articles) {
-        if (seen.has(article.url)) continue;
-        seen.add(article.url);
-        const enriched = await enrichArticle(article);
-        allArticles.push(enriched);
-        if (allArticles.length >= CONFIG.maxArticles) break;
+    let articles = [];
+    if (source.isRss) {
+      // RSS 源头直接拿原始文本，用正则解析
+      try {
+        const rawText = fetchRawWithCurl(source.url);
+        articles = extractArticles(null, source, rawText);
+        console.log(`   📰 RSS 抽取到 ${articles.length} 篇`);
+      } catch (err) {
+        console.warn(`   ⚠️ RSS 抓取失败: ${source.url} — ${err.message}`);
+      }
+    } else {
+      const $ = await fetchPage(source.url);
+      if ($) {
+        articles = extractArticles($, source);
+        console.log(`   📰 分类页抽取到 ${articles.length} 篇文章`);
       }
     }
 
-    if (allArticles.length >= CONFIG.maxArticles) break;
+    for (const article of articles) {
+      if (seen.has(article.url)) continue;
+      seen.add(article.url);
+      // 并发补全文章详情
+      pendingEnrichments.push(enrichArticle(article));
+    }
+
+    if (seen.size >= CONFIG.maxArticles) break;
+  }
+
+  // 等待所有文章详情加载完成
+  if (pendingEnrichments.length > 0) {
+    console.log(`\n🔄 并发补全 ${pendingEnrichments.length} 篇文章详情...`);
+    const results = await Promise.all(pendingEnrichments);
+    allArticles.push(...results);
   }
 
   allArticles.sort((a, b) => {
