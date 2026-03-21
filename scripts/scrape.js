@@ -301,12 +301,33 @@ function generateArticleCard(article, isFeatured = false) {
 }
 
 /**
+ * 统一生成北京时间戳，避免受运行机器时区影响
+ */
+function formatBeijingTimestamp(date = new Date()) {
+  const formatter = new Intl.DateTimeFormat('zh-CN', {
+    timeZone: 'Asia/Shanghai',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+
+  const parts = formatter.formatToParts(date);
+  const map = Object.fromEntries(parts.map(part => [part.type, part.value]));
+
+  return {
+    updateDate: `${map.year}.${map.month}.${map.day}`,
+    updateTime: `${map.hour}:${map.minute}`,
+  };
+}
+
+/**
  * 生成 HTML 页面
  */
 function generateHTML(articles) {
-  const now = new Date();
-  const updateDate = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')}`;
-  const updateTime = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  const { updateDate, updateTime } = formatBeijingTimestamp();
 
   const featured = articles[0];
   const rest = articles.slice(1);
