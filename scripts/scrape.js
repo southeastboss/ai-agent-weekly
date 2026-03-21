@@ -14,6 +14,7 @@ const cheerio = require('cheerio');
 const Turndown = require('turndown');
 const fs = require('fs');
 const path = require('path');
+const { execFileSync } = require('child_process');
 
 // ─── 配置 ───────────────────────────────────────────────────────────────
 const CONFIG = {
@@ -54,6 +55,28 @@ const turndown = new Turndown({
 });
 
 /**
+ * 通过 curl 抓取页面（作为 axios 403 时的回退）
+ */
+function fetchPageWithCurl(url) {
+  const curlBin = process.platform === 'win32' ? 'curl.exe' : 'curl';
+  const args = [
+    '-L',
+    '-A',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+    '--max-time',
+    '30',
+    url,
+  ];
+
+  const html = execFileSync(curlBin, args, {
+    encoding: 'utf8',
+    maxBuffer: 10 * 1024 * 1024,
+  });
+
+  return cheerio.load(html);
+}
+
+/**
  * 抓取单个页面
  */
 async function fetchPage(url) {
@@ -68,9 +91,15 @@ async function fetchPage(url) {
     });
     return cheerio.load(response.data);
   } catch (error) {
-    console.error(`❌ 请求失败: ${url}`);
-    console.error(`   错误: ${error.message}`);
-    return null;
+    console.warn(`⚠️ axios 请求失败，尝试 curl 回退: ${url}`);
+    console.warn(`   axios 错误: ${error.message}`);
+    try {
+      return fetchPageWithCurl(url);
+    } catch (curlError) {
+      console.error(`❌ curl 回退也失败: ${url}`);
+      console.error(`   curl 错误: ${curlError.message}`);
+      return null;
+    }
   }
 }
 
@@ -79,8 +108,9 @@ async function fetchPage(url) {
  */
 function extractArticles($, source) {
   const articles = [];
-  
-  // 尝试不同的选择器（网站结构可能有多种形式）
+  const seen = new Set();
+
+  // 先尝试传统列表结构
   const selectors = [
     'article.post',
     'div.post-item',
@@ -102,38 +132,82 @@ function extractArticles($, source) {
 
   items.slice(0, CONFIG.maxArticles).each((index, element) => {
     const article = {};
-
-    // 标题
     const titleEl = $('h2 a, h3 a, .entry-title a, a.post-title', element).first();
     article.title = titleEl.text().trim();
     article.url = titleEl.attr('href') || '';
-
-    // 日期
     const dateEl = $('time, .date, .published, .post-date', element).first();
     article.date = dateEl.text().trim().substring(0, 10) || '';
-
-    // 摘要
     const descEl = $('p:not(:empty)', element).first();
     article.description = descEl.text().trim().substring(0, 200);
-
-    // 来源分类
     article.sourceCategory = source.category;
     article.tag = source.tag;
     article.tagClass = source.tagClass;
 
-    if (article.title && article.url) {
+    if (article.title && article.url && !seen.has(article.url)) {
+      seen.add(article.url);
       articles.push(article);
     }
   });
 
-  return articles;
+  // 回退：页面不是传统 archive 卡片，而是直接包含多篇文章链接
+  if (articles.length === 0) {
+    console.log('   ↩️ 未命中列表结构，回退到链接抽取模式');
+    $('a[href*="/news/"]').each((index, el) => {
+      const href = $(el).attr('href') || '';
+      const title = $(el).text().trim().replace(/\s+/g, ' ');
+
+      if (!href) return;
+      if (seen.has(href)) return;
+      if (href.includes('/news/videos')) return;
+      if (!title) return;
+      if (title.length < 12) return;
+
+      seen.add(href);
+      articles.push({
+        title,
+        url: href,
+        date: '',
+        description: '',
+        sourceCategory: source.category,
+        tag: source.tag,
+        tagClass: source.tagClass,
+      });
+    });
+  }
+
+  return articles.slice(0, CONFIG.maxArticles);
 }
 
 /**
  * 抓取所有来源
  */
+async function enrichArticle(article) {
+  try {
+    const $ = await fetchPage(article.url);
+    if (!$) return article;
+
+    const metaTitle = $('meta[property="og:title"]').attr('content') || $('title').text().trim();
+    const metaDesc = $('meta[property="og:description"]').attr('content') || $('meta[name="description"]').attr('content') || '';
+    const metaDate = $('meta[property="article:published_time"]').attr('content') || '';
+    const metaImage = $('meta[property="og:image"]').attr('content') || '';
+
+    return {
+      ...article,
+      title: (metaTitle || article.title || '').replace(/&#039;/g, "'").replace(/\s+/g, ' ').trim(),
+      description: (metaDesc || article.description || '').replace(/&#039;/g, "'").replace(/\s+/g, ' ').trim(),
+      date: metaDate ? metaDate.substring(0, 10) : article.date,
+      image: metaImage,
+    };
+  } catch (error) {
+    console.warn(`   ⚠️ 文章详情补全失败: ${article.url}`);
+    console.warn(`      ${error.message}`);
+    return article;
+  }
+}
+
 async function scrapeAllSources() {
   const allArticles = [];
+  const seen = new Set();
 
   for (const source of CONFIG.sources) {
     console.log(`\n📡 正在抓取: ${source.name}`);
@@ -141,15 +215,23 @@ async function scrapeAllSources() {
     
     if ($) {
       const articles = extractArticles($, source);
-      console.log(`   📰 获取到 ${articles.length} 篇文章`);
-      allArticles.push(...articles);
+      console.log(`   📰 分类页抽取到 ${articles.length} 篇文章`);
+
+      for (const article of articles) {
+        if (seen.has(article.url)) continue;
+        seen.add(article.url);
+        const enriched = await enrichArticle(article);
+        allArticles.push(enriched);
+        if (allArticles.length >= CONFIG.maxArticles) break;
+      }
     }
+
+    if (allArticles.length >= CONFIG.maxArticles) break;
   }
 
-  // 按日期排序（最新的在前）
   allArticles.sort((a, b) => {
-    const dateA = new Date(a.date);
-    const dateB = new Date(b.date);
+    const dateA = new Date(a.date || '1970-01-01');
+    const dateB = new Date(b.date || '1970-01-01');
     return dateB - dateA;
   });
 
@@ -161,7 +243,7 @@ async function scrapeAllSources() {
  */
 function generateArticleCard(article, isFeatured = false) {
   const imageIndex = Math.abs(article.title.hashCode()) % 10;
-  const imageUrl = `https://picsum.photos/seed/${imageIndex}/800/400`;
+  const imageUrl = article.image || `https://picsum.photos/seed/${imageIndex}/800/400`;
   
   const tagMap = {
     'tag-agent': { bg: 'linear-gradient(135deg, #6366f1, #8b5cf6)', label: article.tag || 'Agent' },
