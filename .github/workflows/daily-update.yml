@@ -40,10 +40,8 @@ jobs:
         run: |
           if git diff --stat | grep -q "index.html"; then
             echo "has_changes=true" >> $GITHUB_OUTPUT
-            echo "Changes detected"
           else
             echo "has_changes=false" >> $GITHUB_OUTPUT
-            echo "No changes"
           fi
 
       - name: Commit and push
