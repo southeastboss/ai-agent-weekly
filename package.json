@@ -5,8 +5,9 @@
   "main": "scripts/scrape.js",
   "scripts": {
     "scrape": "node scripts/scrape.js",
-    "preview": "node scripts/scrape.js && echo 'HTML generated, open index.html in browser'",
-    "test": "node scripts/scrape.js --dry-run"
+    "smoke-check": "node scripts/smoke-check.js",
+    "preview": "node scripts/scrape.js && node scripts/smoke-check.js && echo 'HTML generated, open index.html in browser'",
+    "test": "node --test tests/workflow-smoke.test.js"
   },
   "keywords": ["ai-agent", "news", "github-actions", "puppeteer"],
   "author": "",
