@@ -69,7 +69,7 @@ const CONFIG = {
     }
   ],
   // 每页最多文章数（从所有来源收集更多，确保 RSS 新文章能进入排序）
-  maxArticles: 20,
+  maxArticles: 10,
   // 输出路径
   outputFile: path.join(__dirname, '..', 'index.html'),
   templateFile: path.join(__dirname, '..', 'template.html')
@@ -316,6 +316,10 @@ async function generateSummary(article) {
       let summary = data.choices[0].message.content.trim();
       // 去掉思考过程标记（使用字符串替换避免 emoji 正则问题）
       summary = summary.split('🤖').join('').split('</think>').join('').split('<think>').join('').trim();
+      // 截断到50字以内
+      if (summary.length > 50) {
+        summary = summary.substring(0, 50) + '…';
+      }
       if (summary) {
         return { ...article, summary };
       }
