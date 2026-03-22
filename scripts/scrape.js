@@ -720,7 +720,7 @@ function generateHTML(articles) {
         }
         .card-summary {
             color: var(--text-muted); font-size: 0.85rem;
-            display: -webkit-box; -webkit-line-clamp: 2;
+            display: -webkit-box; -webkit-line-clamp: 4;
             -webkit-box-orient: vertical; overflow: hidden;
             background: linear-gradient(135deg, rgba(99,102,241,0.08), rgba(139,92,246,0.08));
             border-left: 3px solid var(--primary);
