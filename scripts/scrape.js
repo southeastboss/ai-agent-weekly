@@ -296,9 +296,10 @@ async function generateSummary(article) {
       {
         model: 'MiniMax-M2.7-highspeed',
         messages: [
+          { role: 'system', content: '你是一个中文新闻摘要助手。请直接输出一句简短的中文摘要（不超过50字），不要输出思考过程，不要加提示语，直接返回摘要。' },
           { role: 'user', content: prompt }
         ],
-        max_tokens: 80,
+        max_tokens: 100,
         temperature: 0.3,
       },
       {
