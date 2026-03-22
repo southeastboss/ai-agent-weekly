@@ -17,6 +17,7 @@ permissions:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+  MINIMAX_API_KEY: ${{ secrets.MINIMAX_API_KEY }}
 
 jobs:
   update-news:

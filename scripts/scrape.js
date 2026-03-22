@@ -279,6 +279,50 @@ function extractArticles($, source, rssText) {
 /**
  * 抓取所有来源
  */
+/**
+ * 使用 MiniMax AI 生成文章摘要（中文，一句话概括）
+ */
+async function generateSummary(article) {
+  if (!article.title || !article.description) return article;
+
+  const prompt = `请为下面这篇英文新闻生成一句简短的中文摘要（不超过50字），直接返回摘要，不要解释：
+
+标题：${article.title}
+内容：${article.description.substring(0, 300)}`;
+
+  try {
+    const { data } = await axios.post(
+      'https://api.minimax.chat/v1/text/chatcompletion_v2',
+      {
+        model: 'MiniMax-Text-01',
+        messages: [
+          { role: 'user', content: prompt }
+        ],
+        max_tokens: 80,
+        temperature: 0.3,
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${process.env.MINIMAX_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        timeout: 20000,
+      }
+    );
+
+    if (data && data.choices && data.choices[0] && data.choices[0].message) {
+      const summary = data.choices[0].message.content.trim();
+      if (summary) {
+        return { ...article, summary };
+      }
+    }
+  } catch (err) {
+    console.warn(`   ⚠️ MiniMax 摘要生成失败: ${err.message}`);
+  }
+
+  return article;
+}
+
 async function translateToChinese(text) {
   if (!text || text.trim().length === 0) return text;
 
@@ -399,7 +443,12 @@ async function scrapeAllSources() {
   if (pendingEnrichments.length > 0) {
     console.log(`\n🔄 并发补全 ${pendingEnrichments.length} 篇文章详情...`);
     const results = await Promise.all(pendingEnrichments);
-    allArticles.push(...results);
+
+    // 使用 MiniMax AI 生成中文摘要（并发）
+    console.log(`\n🤖 并发生成 AI 摘要...`);
+    const summaryPromises = results.map(article => generateSummary(article));
+    const summarized = await Promise.all(summaryPromises);
+    allArticles.push(...summarized);
   }
 
   allArticles.sort((a, b) => {
@@ -439,7 +488,7 @@ function generateArticleCard(article, isFeatured = false) {
         <h2 class="card-title">
           <a href="${article.url}" target="_blank">${article.title}</a>
         </h2>
-        <p class="card-desc">${article.description}</p>
+        ${article.summary ? `<p class="card-summary">🤖 ${article.summary}</p>` : `<p class="card-desc">${article.description}</p>`}
         <div class="card-footer">
           <div class="card-source">
             <span class="icon" style="background:${tagInfo.bg.split(',')[0].replace('linear-gradient(135deg, ', '')}">${article.title.charAt(0)}</span>
@@ -461,7 +510,7 @@ function generateArticleCard(article, isFeatured = false) {
         <h3 class="card-title">
           <a href="${article.url}" target="_blank">${article.title}</a>
         </h3>
-        <p class="card-desc">${article.description}</p>
+        ${article.summary ? `<p class="card-summary">🤖 ${article.summary}</p>` : `<p class="card-desc">${article.description}</p>`}
         <div class="card-meta">
           <div class="card-source">
             <span class="icon" style="background:${tagInfo.bg.split(',')[0].replace('linear-gradient(135deg, ', '')}">${article.title.charAt(0)}</span>
@@ -697,6 +746,15 @@ function generateHTML(articles) {
             -webkit-box-orient: vertical; overflow: hidden;
             transition: color 0.4s ease;
         }
+        .card-summary {
+            color: var(--text-muted); font-size: 0.85rem;
+            display: -webkit-box; -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical; overflow: hidden;
+            background: linear-gradient(135deg, rgba(99,102,241,0.08), rgba(139,92,246,0.08));
+            border-left: 3px solid var(--primary);
+            padding: 0.4rem 0.6rem; border-radius: 4px;
+            margin-top: 0.3rem;
+        }
         .article-card .card-meta {
             display: flex; align-items: center; justify-content: space-between;
             margin-top: 1rem; padding-top: 0.8rem;
@@ -744,6 +802,13 @@ function generateHTML(articles) {
             color: var(--text-muted); font-size: 0.95rem;
             line-height: 1.7; margin-bottom: 1.5rem;
             transition: color 0.4s ease;
+        }
+        .featured-card .card-summary {
+            color: var(--text); font-size: 0.95rem;
+            line-height: 1.7; margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, rgba(99,102,241,0.12), rgba(139,92,246,0.12));
+            border-left: 4px solid var(--primary);
+            padding: 0.6rem 1rem; border-radius: 6px;
         }
         .featured-card .card-footer { display: flex; align-items: center; justify-content: space-between; }
         .featured-card .card-source { display: flex; align-items: center; gap: 0.5rem; color: var(--text-muted); font-size: 0.82rem; }
