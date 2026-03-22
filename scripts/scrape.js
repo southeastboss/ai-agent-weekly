@@ -294,7 +294,7 @@ async function generateSummary(article) {
     const { data } = await axios.post(
       'https://api.minimaxi.com/v1/chat/completions',
       {
-        model: 'MiniMax-M2.5',
+        model: 'MiniMax-M2.7-highspeed',
         messages: [
           { role: 'user', content: prompt }
         ],
