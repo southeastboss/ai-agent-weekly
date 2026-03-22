@@ -335,44 +335,6 @@ async function translateToChinese(text) {
   return result || text;
 }
 
-async function generateTitle(text) {
-  if (!text || text.trim().length === 0) return text;
-
-  const prompt = `${text}`;
-
-  try {
-    const { data } = await axios.post(
-      'https://api.minimaxi.com/v1/chat/completions',
-      {
-        model: 'MiniMax-M2.5',
-        messages: [
-          { role: 'user', content: `把下面标题翻译成中文（20字以内），只输出翻译结果：\n${prompt}` }
-        ],
-        max_tokens: 50,
-        temperature: 0.3,
-        think_config: { enabled: false },
-      },
-      {
-        headers: {
-          'Authorization': `Bearer ${process.env.MINIMAX_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        timeout: 30000,
-      }
-    );
-    if (data && data.choices && data.choices[0] && data.choices[0].message) {
-      let title = data.choices[0].message.content.trim();
-      // 去掉思考过程标记
-      title = title.split('🤖').join('').split('<think>').join('').split('</think>').join('').trim();
-      if (title && title.length <= 20) return title;
-      if (title) return title.substring(0, 20);
-    }
-  } catch (err) {
-    console.warn(`   ⚠️ AI标题生成失败: ${err.message}`);
-  }
-  return text;
-}
-
 // 用翻译 API 处理标题（更稳定）
 async function translateTitle(text) {
   return translateToChinese(text);
