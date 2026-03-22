@@ -296,7 +296,7 @@ async function translateToChinese(text) {
     return tryTranslate(provider, attempt + 1);
   }
 
-  // 方案1：MyMemory
+  // MyMemory 免费 API，带重试
   const tryMyMemory = async () => {
     const { data } = await axios.get(
       'https://api.mymemory.translated.net/get',
@@ -315,18 +315,7 @@ async function translateToChinese(text) {
     return null;
   };
 
-  // 方案2：LibreTranslate（质量更高，无字符截断）
-  const tryLibreTranslate = async () => {
-    const { data } = await axios.post(
-      'https://libretranslate.com/translate',
-      { q: text, source: 'en', target: 'zh', format: 'text' },
-      { headers: { 'Content-Type': 'application/json' }, timeout: 15000 }
-    );
-    if (data && data.translatedText) return data.translatedText;
-    return null;
-  };
-
-  const result = await tryTranslate(tryMyMemory) || await tryTranslate(tryLibreTranslate);
+  const result = await tryTranslate(tryMyMemory);
   return result || text;
 }
 
