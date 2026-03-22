@@ -287,44 +287,11 @@ async function generateSummary(article) {
 
   const prompt = `一句话概括这段新闻（限50字内）：${article.title}。${article.description.substring(0, 200)}`;
 
-  try {
-    const { data } = await axios.post(
-      'https://api.minimaxi.com/v1/chat/completions',
-      {
-        model: 'MiniMax-M2.5',
-        messages: [
-          { role: 'system', content: '你是一个中文新闻摘要助手。请直接输出一句简短的中文摘要（不超过50字），不要输出思考过程，不要加提示语，直接返回摘要。' },
-          { role: 'user', content: prompt }
-        ],
-        max_tokens: 100,
-        temperature: 0.3,
-        think_config: { enabled: false },
-      },
-      {
-        headers: {
-          'Authorization': `Bearer ${process.env.MINIMAX_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        timeout: 60000,
-      }
-    );
-
-    if (data && data.choices && data.choices[0] && data.choices[0].message) {
-      let summary = data.choices[0].message.content.trim();
-      // 去掉思考过程标记（使用字符串替换避免 emoji 正则问题）
-      summary = summary.split('🤖').join('').split('</think>').join('').split('<think>').join('').trim();
-      // 截断到50字以内
-      if (summary.length > 50) {
-        summary = summary.substring(0, 50) + '…';
-      }
-      if (summary) {
-        return { ...article, summary };
-      }
-    }
-  } catch (err) {
-    console.warn(`   ⚠️ MiniMax 摘要生成失败: ${err.message}`);
+  // 直接使用原文描述作为摘要，跳过AI生成
+  const summary = article.description ? article.description.substring(0, 50).trim() + '…' : '';
+  if (summary) {
+    return { ...article, summary };
   }
-
   return article;
 }
 
