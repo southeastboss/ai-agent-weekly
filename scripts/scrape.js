@@ -335,6 +335,39 @@ async function translateToChinese(text) {
   return result || text;
 }
 
+async function generateTitle(text) {
+  if (!text || text.trim().length === 0) return text;
+
+  const prompt = `为下面英文标题生成一句简短中文标题，不超过20字，直接返回标题，不要解释：
+${text}`;
+
+  try {
+    const { data } = await axios.post(
+      'https://api.minimaxi.com/v1/chat/completions',
+      {
+        model: 'MiniMax-M2.5',
+        messages: [
+          { role: 'user', content: prompt }
+        ],
+        max_tokens: 50,
+        temperature: 0.3,
+      },
+      { timeout: 30000 }
+    );
+    if (data && data.choices && data.choices[0] && data.choices[0].message) {
+      let title = data.choices[0].message.content.trim();
+      // 截断到20字
+      if (title.length > 20) {
+        title = title.substring(0, 20);
+      }
+      if (title) return title;
+    }
+  } catch (err) {
+    console.warn(`   ⚠️ AI标题生成失败: ${err.message}`);
+  }
+  return text;
+}
+
 async function enrichArticle(article) {
   const rawTitle = (article.title || '').replace(/&#039;/g, "'").replace(/\s+/g, ' ').trim();
   const rawDesc = (article.description || '').replace(/&#039;/g, "'").replace(/\s+/g, ' ').trim();
@@ -349,14 +382,14 @@ async function enrichArticle(article) {
 
       const title = (metaTitle || rawTitle).replace(/&#039;/g, "'").replace(/\s+/g, ' ').replace(/\s*\|\s*TechCrunch\s*$/i, '').trim();
       const desc = (metaDesc || rawDesc).replace(/&#039;/g, "'").replace(/\s+/g, ' ').trim();
-      const [translatedTitle, translatedDesc] = await Promise.all([
-        translateToChinese(title),
+      const [generatedTitle, translatedDesc] = await Promise.all([
+        generateTitle(title),
         translateToChinese(desc),
       ]);
 
       return {
         ...article,
-        title: translatedTitle || title,
+        title: generatedTitle || title,
         description: translatedDesc || desc,
         date: metaDate ? metaDate.substring(0, 10) : article.date,
         image: metaImage || article.image,
@@ -366,14 +399,14 @@ async function enrichArticle(article) {
     // 页面抓取失败不影响翻译
   }
 
-  const [translatedTitle, translatedDesc] = await Promise.all([
-    translateToChinese(rawTitle),
+  const [generatedTitle, translatedDesc] = await Promise.all([
+    generateTitle(rawTitle),
     translateToChinese(rawDesc),
   ]);
 
   return {
     ...article,
-    title: translatedTitle || rawTitle,
+    title: generatedTitle || rawTitle,
     description: translatedDesc || rawDesc,
   };
 }
