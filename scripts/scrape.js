@@ -288,7 +288,7 @@ async function generateSummary(article) {
   const prompt = `一句话概括这段新闻（限50字内）：${article.title}。${article.description.substring(0, 200)}`;
 
   // 直接使用原文描述作为摘要，跳过AI生成
-  const summary = article.description ? article.description.substring(0, 80).trim() : '';
+  const summary = article.description ? article.description.substring(0, 100).trim() : '';
   if (summary) {
     return { ...article, summary };
   }
@@ -337,7 +337,11 @@ async function translateToChinese(text) {
 
 // 用翻译 API 处理标题（更稳定）
 async function translateTitle(text) {
-  return translateToChinese(text);
+  const translated = await translateToChinese(text);
+  if (translated && translated.length > 50) {
+    return translated.substring(0, 50);
+  }
+  return translated || text;
 }
 
 async function enrichArticle(article) {
