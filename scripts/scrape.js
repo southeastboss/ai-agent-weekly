@@ -335,13 +335,9 @@ async function translateToChinese(text) {
   return result || text;
 }
 
-// 用翻译 API 处理标题（更稳定）
+// 标题不做翻译，保持原样
 async function translateTitle(text) {
-  const translated = await translateToChinese(text);
-  if (translated && translated.length > 50) {
-    return translated.substring(0, 50);
-  }
-  return translated || text;
+  return text;
 }
 
 async function enrichArticle(article) {
