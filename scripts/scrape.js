@@ -285,10 +285,7 @@ function extractArticles($, source, rssText) {
 async function generateSummary(article) {
   if (!article.title || !article.description) return article;
 
-  const prompt = `请为下面这篇英文新闻生成一句简短的中文摘要（不超过50字），直接返回摘要，不要解释：
-
-标题：${article.title}
-内容：${article.description.substring(0, 300)}`;
+  const prompt = `一句话概括这段新闻（限50字内）：${article.title}。${article.description.substring(0, 200)}`;
 
   try {
     const { data } = await axios.post(
