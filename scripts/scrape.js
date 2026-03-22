@@ -292,9 +292,9 @@ async function generateSummary(article) {
 
   try {
     const { data } = await axios.post(
-      'https://api.minimax.chat/v1/text/chatcompletion_v2',
+      'https://api.minimax.chat/v1/text/chatcompletion_pro',
       {
-        model: 'MiniMax-Text-01',
+        model: 'MiniMax-M2.7-highspeed',
         messages: [
           { role: 'user', content: prompt }
         ],
