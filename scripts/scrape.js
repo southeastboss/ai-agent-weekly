@@ -301,6 +301,7 @@ async function generateSummary(article) {
         ],
         max_tokens: 100,
         temperature: 0.3,
+        think_config: { enabled: false },
       },
       {
         headers: {
