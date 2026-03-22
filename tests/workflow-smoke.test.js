@@ -34,12 +34,14 @@ function makeHtml({ featured = 1, articles = 9 }) {
 test('workflow runs smoke check after scrape and opts out of Node 20 deprecation risk', () => {
   const workflow = fs.readFileSync(workflowPath, 'utf8');
 
-  assert.match(workflow, /run:\s*npm run scrape/);
-  assert.match(workflow, /run:\s*npm run smoke-check/);
-  assert.ok(
-    workflow.indexOf('npm run smoke-check') > workflow.indexOf('npm run scrape'),
-    'smoke check should run after scraper'
-  );
+  const scrapeIdx = workflow.indexOf('npm run scrape');
+  const smokeIdx = workflow.indexOf('npm run smoke-check');
+  assert.ok(scrapeIdx !== -1, 'should have npm run scrape');
+  assert.ok(smokeIdx !== -1, 'should have npm run smoke-check');
+  assert.ok(smokeIdx > scrapeIdx, 'smoke check should run after scraper');
+
+  const pullIdx = workflow.indexOf('git pull --rebase origin master');
+  assert.ok(pullIdx !== -1 && pullIdx < scrapeIdx, 'git pull --rebase should come before scrape');
 
   assert.match(workflow, /FORCE_JAVASCRIPT_ACTIONS_TO_NODE24:\s*true|FORCE_JAVASCRIPT_ACTIONS_TO_NODE24:\s*'true'/);
   assert.match(workflow, /uses:\s*actions\/checkout@v6/);

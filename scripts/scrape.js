@@ -281,7 +281,23 @@ function extractArticles($, source, rssText) {
  */
 async function translateToChinese(text) {
   if (!text || text.trim().length === 0) return text;
-  try {
+
+  const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+  async function tryTranslate(provider, attempt = 1) {
+    if (attempt > 2) return null;
+    try {
+      const result = await provider();
+      if (result) return result;
+    } catch (err) {
+      console.warn(`   ⚠️ 翻译失败（尝试 ${attempt}/2）: ${err.message}`);
+    }
+    await sleep(attempt * 800);
+    return tryTranslate(provider, attempt + 1);
+  }
+
+  // 方案1：MyMemory
+  const tryMyMemory = async () => {
     const { data } = await axios.get(
       'https://api.mymemory.translated.net/get',
       {
@@ -290,65 +306,71 @@ async function translateToChinese(text) {
           langpair: 'en|zh',
           de: 'ai-agent-weekly@proton.me',
         },
-        timeout: 10000,
+        timeout: 12000,
       }
     );
     if (data && data.responseStatus === 200 && data.responseData && data.responseData.translatedText) {
       return data.responseData.translatedText;
     }
-  } catch (err) {
-    // translation failure is non-fatal
-  }
-  return text;
+    return null;
+  };
+
+  // 方案2：LibreTranslate（质量更高，无字符截断）
+  const tryLibreTranslate = async () => {
+    const { data } = await axios.post(
+      'https://libretranslate.com/translate',
+      { q: text, source: 'en', target: 'zh', format: 'text' },
+      { headers: { 'Content-Type': 'application/json' }, timeout: 15000 }
+    );
+    if (data && data.translatedText) return data.translatedText;
+    return null;
+  };
+
+  const result = await tryTranslate(tryMyMemory) || await tryTranslate(tryLibreTranslate);
+  return result || text;
 }
 
 async function enrichArticle(article) {
-  const isBlockedSite = article.url && article.url.includes('artificialintelligence-news.com');
-
-  if (isBlockedSite) {
-    // 该站被CAPTCHA封禁，只能翻译现有内容
-    const rawTitle = (article.title || '').replace(/&#039;/g, "'").replace(/\s+/g, ' ').trim();
-    const rawDesc = (article.description || '').replace(/&#039;/g, "'").replace(/\s+/g, ' ').trim();
-    const [translatedTitle, translatedDesc] = await Promise.all([
-      translateToChinese(rawTitle),
-      translateToChinese(rawDesc),
-    ]);
-    return {
-      ...article,
-      title: translatedTitle || rawTitle,
-      description: translatedDesc || rawDesc,
-    };
-  }
+  const rawTitle = (article.title || '').replace(/&#039;/g, "'").replace(/\s+/g, ' ').trim();
+  const rawDesc = (article.description || '').replace(/&#039;/g, "'").replace(/\s+/g, ' ').trim();
 
   try {
     const $ = await fetchPage(article.url);
-    if (!$) return article;
+    if ($) {
+      const metaTitle = $('meta[property="og:title"]').attr('content') || $('title').text().trim();
+      const metaDesc = $('meta[property="og:description"]').attr('content') || $('meta[name="description"]').attr('content') || '';
+      const metaDate = $('meta[property="article:published_time"]').attr('content') || '';
+      const metaImage = $('meta[property="og:image"]').attr('content') || '';
 
-    const metaTitle = $('meta[property="og:title"]').attr('content') || $('title').text().trim();
-    const metaDesc = $('meta[property="og:description"]').attr('content') || $('meta[name="description"]').attr('content') || '';
-    const metaDate = $('meta[property="article:published_time"]').attr('content') || '';
-    const metaImage = $('meta[property="og:image"]').attr('content') || '';
+      const title = (metaTitle || rawTitle).replace(/&#039;/g, "'").replace(/\s+/g, ' ').trim();
+      const desc = (metaDesc || rawDesc).replace(/&#039;/g, "'").replace(/\s+/g, ' ').trim();
+      const [translatedTitle, translatedDesc] = await Promise.all([
+        translateToChinese(title),
+        translateToChinese(desc),
+      ]);
 
-    const rawTitle = (metaTitle || article.title || '').replace(/&#039;/g, "'").replace(/\s+/g, ' ').trim();
-    const rawDesc = (metaDesc || article.description || '').replace(/&#039;/g, "'").replace(/\s+/g, ' ').trim();
-
-    const [translatedTitle, translatedDesc] = await Promise.all([
-      translateToChinese(rawTitle),
-      translateToChinese(rawDesc),
-    ]);
-
-    return {
-      ...article,
-      title: translatedTitle || rawTitle,
-      description: translatedDesc || rawDesc,
-      date: metaDate ? metaDate.substring(0, 10) : article.date,
-      image: metaImage,
-    };
+      return {
+        ...article,
+        title: translatedTitle || title,
+        description: translatedDesc || desc,
+        date: metaDate ? metaDate.substring(0, 10) : article.date,
+        image: metaImage || article.image,
+      };
+    }
   } catch (error) {
-    console.warn(`   ⚠️ 文章详情补全失败: ${article.url}`);
-    console.warn(`      ${error.message}`);
-    return article;
+    // 页面抓取失败不影响翻译
   }
+
+  const [translatedTitle, translatedDesc] = await Promise.all([
+    translateToChinese(rawTitle),
+    translateToChinese(rawDesc),
+  ]);
+
+  return {
+    ...article,
+    title: translatedTitle || rawTitle,
+    description: translatedDesc || rawDesc,
+  };
 }
 
 async function scrapeAllSources() {
