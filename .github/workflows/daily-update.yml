@@ -10,7 +10,7 @@ on:
 
 concurrency:
   group: ai-agent-weekly-update
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 permissions:
   contents: write
@@ -38,33 +38,24 @@ jobs:
         run: npm ci
 
       - name: Run scraper
-        run: npm run scrape
+        run: |
+          git pull --rebase origin master || true
+          npm run scrape
 
       - name: Smoke check generated HTML
         run: npm run smoke-check
 
-      - name: Check for changes
-        id: check_changes
-        run: |
-          if git diff --stat | grep -q "index.html"; then
-            echo "has_changes=true" >> $GITHUB_OUTPUT
-          else
-            echo "has_changes=false" >> $GITHUB_OUTPUT
-          fi
-
       - name: Commit and push
-        if: steps.check_changes.outputs.has_changes == 'true'
         run: |
           git config --local user.name "github-actions[bot]"
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git add index.html
-          git commit -m "auto-update: $(date +'%Y-%m-%d')"
-          git push
+          git commit -m "auto-update: $(date +'%Y-%m-%d')" || true
+          git push || true
         env:
           GITHUB_TOKEN: ${{ github.token }}
 
       - name: Upload artifact
-        if: steps.check_changes.outputs.has_changes == 'true'
         uses: actions/upload-artifact@v7
         with:
           name: generated-html
@@ -74,17 +65,16 @@ jobs:
       - name: Notify on failure
         if: failure()
         run: |
-          MSG="❌ ai-agent-weekly 更新失败！请检查日志。"
           curl -s "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             -d "chat_id=${TELEGRAM_CHAT_ID}" \
-            -d "text=${MSG}" \
+            -d "text=❌ ai-agent-weekly 更新失败！" \
             || true
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
 
       - name: Notify on success
-        if: success() && steps.check_changes.outputs.has_changes == 'true'
+        if: success()
         run: |
           curl -s "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             -d "chat_id=${TELEGRAM_CHAT_ID}" \
