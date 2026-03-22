@@ -352,14 +352,16 @@ ${text}`;
         max_tokens: 50,
         temperature: 0.3,
       },
-      { timeout: 30000 }
+      {
+        headers: {
+          'Authorization': `Bearer ${process.env.MINIMAX_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        timeout: 30000,
+      }
     );
     if (data && data.choices && data.choices[0] && data.choices[0].message) {
       let title = data.choices[0].message.content.trim();
-      // 截断到20字
-      if (title.length > 20) {
-        title = title.substring(0, 20);
-      }
       if (title) return title;
     }
   } catch (err) {
