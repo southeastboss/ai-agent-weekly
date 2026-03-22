@@ -460,7 +460,7 @@ function generateArticleCard(article, isFeatured = false) {
         <h2 class="card-title">
           <a href="${article.url}" target="_blank">${article.title}</a>
         </h2>
-        ${article.summary ? `<p class="card-summary">🤖 ${article.summary}</p>` : `<p class="card-desc">${article.description}</p>`}
+        ${article.summary ? `<p class="card-summary">${article.summary}</p>` : `<p class="card-desc">${article.description}</p>`}
         <div class="card-footer">
           <div class="card-source">
             <span class="icon" style="background:${tagInfo.bg.split(',')[0].replace('linear-gradient(135deg, ', '')}">${article.title.charAt(0)}</span>
@@ -482,7 +482,7 @@ function generateArticleCard(article, isFeatured = false) {
         <h3 class="card-title">
           <a href="${article.url}" target="_blank">${article.title}</a>
         </h3>
-        ${article.summary ? `<p class="card-summary">🤖 ${article.summary}</p>` : `<p class="card-desc">${article.description}</p>`}
+        ${article.summary ? `<p class="card-summary">${article.summary}</p>` : `<p class="card-desc">${article.description}</p>`}
         <div class="card-meta">
           <div class="card-source">
             <span class="icon" style="background:${tagInfo.bg.split(',')[0].replace('linear-gradient(135deg, ', '')}">${article.title.charAt(0)}</span>
