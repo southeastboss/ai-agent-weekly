@@ -338,8 +338,7 @@ async function translateToChinese(text) {
 async function generateTitle(text) {
   if (!text || text.trim().length === 0) return text;
 
-  const prompt = `为下面英文标题生成一句简短中文标题，不超过20字，直接返回标题，不要解释：
-${text}`;
+  const prompt = `${text}`;
 
   try {
     const { data } = await axios.post(
@@ -347,10 +346,11 @@ ${text}`;
       {
         model: 'MiniMax-M2.5',
         messages: [
-          { role: 'user', content: prompt }
+          { role: 'user', content: `把下面标题翻译成中文（20字以内），只输出翻译结果：\n${prompt}` }
         ],
         max_tokens: 50,
         temperature: 0.3,
+        think_config: { enabled: false },
       },
       {
         headers: {
@@ -362,7 +362,10 @@ ${text}`;
     );
     if (data && data.choices && data.choices[0] && data.choices[0].message) {
       let title = data.choices[0].message.content.trim();
-      if (title) return title;
+      // 去掉思考过程标记
+      title = title.split('🤖').join('').split('<think>').join('').split('</think>').join('').trim();
+      if (title && title.length <= 20) return title;
+      if (title) return title.substring(0, 20);
     }
   } catch (err) {
     console.warn(`   ⚠️ AI标题生成失败: ${err.message}`);
