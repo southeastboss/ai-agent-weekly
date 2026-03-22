@@ -314,8 +314,8 @@ async function generateSummary(article) {
 
     if (data && data.choices && data.choices[0] && data.choices[0].message) {
       let summary = data.choices[0].message.content.trim();
-      // 去掉思考过程标记
-      summary = summary.replace(/🤖/g, '').replace(/</think>/g, '').replace(/<think>/g, '').trim();
+      // 去掉思考过程标记（使用字符串替换避免 emoji 正则问题）
+      summary = summary.split('🤖').join('').split('</think>').join('').split('<think>').join('').trim();
       if (summary) {
         return { ...article, summary };
       }
