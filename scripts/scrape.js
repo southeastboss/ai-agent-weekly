@@ -294,7 +294,7 @@ async function generateSummary(article) {
     const { data } = await axios.post(
       'https://api.minimaxi.com/v1/chat/completions',
       {
-        model: 'MiniMax-M2.7-highspeed',
+        model: 'MiniMax-M2.5',
         messages: [
           { role: 'system', content: '你是一个中文新闻摘要助手。请直接输出一句简短的中文摘要（不超过50字），不要输出思考过程，不要加提示语，直接返回摘要。' },
           { role: 'user', content: prompt }
