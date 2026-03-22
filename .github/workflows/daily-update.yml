@@ -10,7 +10,7 @@ on:
 
 concurrency:
   group: ai-agent-weekly-update
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 permissions:
   contents: write
