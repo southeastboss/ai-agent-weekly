@@ -313,7 +313,9 @@ async function generateSummary(article) {
     );
 
     if (data && data.choices && data.choices[0] && data.choices[0].message) {
-      const summary = data.choices[0].message.content.trim();
+      let summary = data.choices[0].message.content.trim();
+      // 去掉思考过程标记
+      summary = summary.replace(/🤖 <think>[\s\S]*?</think>/g, '').trim();
       if (summary) {
         return { ...article, summary };
       }
