@@ -308,7 +308,7 @@ async function generateSummary(article) {
           'Authorization': `Bearer ${process.env.MINIMAX_API_KEY}`,
           'Content-Type': 'application/json',
         },
-        timeout: 20000,
+        timeout: 60000,
       }
     );
 
