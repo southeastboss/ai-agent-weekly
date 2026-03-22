@@ -373,6 +373,11 @@ async function generateTitle(text) {
   return text;
 }
 
+// 用翻译 API 处理标题（更稳定）
+async function translateTitle(text) {
+  return translateToChinese(text);
+}
+
 async function enrichArticle(article) {
   const rawTitle = (article.title || '').replace(/&#039;/g, "'").replace(/\s+/g, ' ').trim();
   const rawDesc = (article.description || '').replace(/&#039;/g, "'").replace(/\s+/g, ' ').trim();
@@ -387,8 +392,8 @@ async function enrichArticle(article) {
 
       const title = (metaTitle || rawTitle).replace(/&#039;/g, "'").replace(/\s+/g, ' ').replace(/\s*\|\s*TechCrunch\s*$/i, '').trim();
       const desc = (metaDesc || rawDesc).replace(/&#039;/g, "'").replace(/\s+/g, ' ').trim();
-      const [generatedTitle, translatedDesc] = await Promise.all([
-        generateTitle(title),
+      const [translatedTitle, translatedDesc] = await Promise.all([
+        translateTitle(title),
         translateToChinese(desc),
       ]);
 
@@ -404,14 +409,14 @@ async function enrichArticle(article) {
     // 页面抓取失败不影响翻译
   }
 
-  const [generatedTitle, translatedDesc] = await Promise.all([
-    generateTitle(rawTitle),
+  const [translatedTitle, translatedDesc] = await Promise.all([
+    translateTitle(rawTitle),
     translateToChinese(rawDesc),
   ]);
 
   return {
     ...article,
-    title: generatedTitle || rawTitle,
+    title: translatedTitle || rawTitle,
     description: translatedDesc || rawDesc,
   };
 }
