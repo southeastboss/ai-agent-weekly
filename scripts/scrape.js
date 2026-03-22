@@ -279,7 +279,47 @@ function extractArticles($, source, rssText) {
 /**
  * 抓取所有来源
  */
+async function translateToChinese(text) {
+  if (!text || text.trim().length === 0) return text;
+  try {
+    const { data } = await axios.get(
+      'https://api.mymemory.translated.net/get',
+      {
+        params: {
+          q: text.substring(0, 500),
+          langpair: 'en|zh',
+          de: 'ai-agent-weekly@proton.me',
+        },
+        timeout: 10000,
+      }
+    );
+    if (data && data.responseStatus === 200 && data.responseData && data.responseData.translatedText) {
+      return data.responseData.translatedText;
+    }
+  } catch (err) {
+    // translation failure is non-fatal
+  }
+  return text;
+}
+
 async function enrichArticle(article) {
+  const isBlockedSite = article.url && article.url.includes('artificialintelligence-news.com');
+
+  if (isBlockedSite) {
+    // 该站被CAPTCHA封禁，只能翻译现有内容
+    const rawTitle = (article.title || '').replace(/&#039;/g, "'").replace(/\s+/g, ' ').trim();
+    const rawDesc = (article.description || '').replace(/&#039;/g, "'").replace(/\s+/g, ' ').trim();
+    const [translatedTitle, translatedDesc] = await Promise.all([
+      translateToChinese(rawTitle),
+      translateToChinese(rawDesc),
+    ]);
+    return {
+      ...article,
+      title: translatedTitle || rawTitle,
+      description: translatedDesc || rawDesc,
+    };
+  }
+
   try {
     const $ = await fetchPage(article.url);
     if (!$) return article;
@@ -289,10 +329,18 @@ async function enrichArticle(article) {
     const metaDate = $('meta[property="article:published_time"]').attr('content') || '';
     const metaImage = $('meta[property="og:image"]').attr('content') || '';
 
+    const rawTitle = (metaTitle || article.title || '').replace(/&#039;/g, "'").replace(/\s+/g, ' ').trim();
+    const rawDesc = (metaDesc || article.description || '').replace(/&#039;/g, "'").replace(/\s+/g, ' ').trim();
+
+    const [translatedTitle, translatedDesc] = await Promise.all([
+      translateToChinese(rawTitle),
+      translateToChinese(rawDesc),
+    ]);
+
     return {
       ...article,
-      title: (metaTitle || article.title || '').replace(/&#039;/g, "'").replace(/\s+/g, ' ').trim(),
-      description: (metaDesc || article.description || '').replace(/&#039;/g, "'").replace(/\s+/g, ' ').trim(),
+      title: translatedTitle || rawTitle,
+      description: translatedDesc || rawDesc,
       date: metaDate ? metaDate.substring(0, 10) : article.date,
       image: metaImage,
     };
