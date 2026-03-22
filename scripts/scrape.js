@@ -164,7 +164,7 @@ function extractRssArticles(rssText, source) {
 
     // 提取 title
     const titleMatch = /<title[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/title>/i.exec(itemXml);
-    const title = titleMatch ? titleMatch[1].replace(/<!\[CDATA\[|\]\]>/g, '').trim() : '';
+    const title = titleMatch ? titleMatch[1].replace(/<!\[CDATA\[|\]\]>/g, '').replace(/\s*\|\s*TechCrunch\s*$/i, '').trim() : '';
 
     // 提取 link
     const linkMatch = /<link[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/link>/i.exec(itemXml);
@@ -840,7 +840,7 @@ function generateHTML(articles) {
 
     <section class="hero">
         <div class="hero-inner">
-            <div class="pill">🧠 专注 · AI Agent 与 Physical AI 前沿</div>
+            <div class="pill">🧠 专注 · AI Agent 前沿</div>
             <h1>AI Agent 本周动态</h1>
             <p>追踪 AI Agent、具身智能、多智能体系统的最新进展与行业应用</p>
             <div class="hero-stats">
