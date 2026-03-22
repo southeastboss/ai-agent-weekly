@@ -288,7 +288,7 @@ async function generateSummary(article) {
   const prompt = `一句话概括这段新闻（限50字内）：${article.title}。${article.description.substring(0, 200)}`;
 
   // 直接使用原文描述作为摘要，跳过AI生成
-  const summary = article.description ? article.description.substring(0, 50).trim() + '…' : '';
+  const summary = article.description ? article.description.substring(0, 80).trim() : '';
   if (summary) {
     return { ...article, summary };
   }
