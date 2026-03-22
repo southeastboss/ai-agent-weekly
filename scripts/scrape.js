@@ -347,7 +347,7 @@ async function enrichArticle(article) {
       const metaDate = $('meta[property="article:published_time"]').attr('content') || '';
       const metaImage = $('meta[property="og:image"]').attr('content') || '';
 
-      const title = (metaTitle || rawTitle).replace(/&#039;/g, "'").replace(/\s+/g, ' ').trim();
+      const title = (metaTitle || rawTitle).replace(/&#039;/g, "'").replace(/\s+/g, ' ').replace(/\s*\|\s*TechCrunch\s*$/i, '').trim();
       const desc = (metaDesc || rawDesc).replace(/&#039;/g, "'").replace(/\s+/g, ' ').trim();
       const [translatedTitle, translatedDesc] = await Promise.all([
         translateToChinese(title),
