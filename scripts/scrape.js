@@ -231,7 +231,7 @@ function extractArticles($, source, rssText) {
   items.slice(0, CONFIG.maxArticles).each((index, element) => {
     const article = {};
     const titleEl = $('h2 a, h3 a, .entry-title a, a.post-title', element).first();
-    article.title = titleEl.text().trim();
+    article.title = titleEl.text().trim().replace(/\s*\|\s*TechCrunch\s*$/i, '');
     article.url = titleEl.attr('href') || '';
     const dateEl = $('time, .date, .published, .post-date', element).first();
     article.date = dateEl.text().trim().substring(0, 10) || '';
