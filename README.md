@@ -2,7 +2,7 @@
 
 🤖 每日自动更新的 AI Agent 前沿资讯网站
 
-**网站地址**：[https://southeastboss.github.io/ai-agent-weekly](https://github.com](https://southeastboss.github.io/ai-agent-weekly/)
+**网站地址**：(https://southeastboss.github.io/ai-agent-weekly/)
 
 **数据来源**：artificialintelligence-news.com（每日自动抓取）
 
