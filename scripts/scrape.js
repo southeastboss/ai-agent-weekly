@@ -361,7 +361,7 @@ async function enrichArticle(article) {
 
       return {
         ...article,
-        title: generatedTitle || title,
+        title: translatedTitle || title,
         description: translatedDesc || desc,
         date: metaDate ? metaDate.substring(0, 10) : article.date,
         image: metaImage || article.image,
