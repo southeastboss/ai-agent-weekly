@@ -33,8 +33,8 @@ if (articleCards < 9) {
   fail(`Expected at least 9 article cards, got ${articleCards}`);
 }
 
-if (totalCards < 10) {
-  fail(`Expected at least 10 total cards, got ${totalCards}`);
+if (totalCards < 9) {
+  fail(`Expected at least 9 total cards, got ${totalCards}`);
 }
 
 if (linkedTitles < totalCards) {

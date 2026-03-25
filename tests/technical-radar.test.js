@@ -9,10 +9,10 @@ const scrapePath = path.join(repoRoot, 'scripts', 'scrape.js');
 const smokeCheckPath = path.join(repoRoot, 'scripts', 'smoke-check.js');
 
 /**
- * Generates a mock HTML with three sections and 15 articles (5 per section).
- * No featured card — all 15 are regular article cards.
+ * Generates a mock HTML with three sections and 9 articles (3 per section).
+ * No featured card — all 9 are regular article cards.
  */
-function makeThreeSectionHtml({ openSource = 5, vendor = 5, frontier = 5 } = {}) {
+function makeThreeSectionHtml({ openSource = 3, vendor = 3, frontier = 3 } = {}) {
   const sections = [
     { id: 'open-source', label: '开源项目', count: openSource },
     { id: 'vendor', label: '厂商动态', count: vendor },
@@ -65,13 +65,13 @@ function makeThreeSectionHtml({ openSource = 5, vendor = 5, frontier = 5 } = {})
 
 // ─── Task 1 Tests ────────────────────────────────────────────────────────────
 
-test('scrape.js CONFIG targets 15 total articles', () => {
+test('scrape.js CONFIG targets 9 total articles', () => {
   const source = fs.readFileSync(scrapePath, 'utf8');
   // Find maxArticles value
   const match = source.match(/maxArticles:\s*(\d+)/);
   assert.ok(match, 'should have maxArticles defined');
   const maxArticles = parseInt(match[1], 10);
-  assert.equal(maxArticles, 15, `maxArticles should be 15, got ${maxArticles}`);
+  assert.equal(maxArticles, 9, `maxArticles should be 9, got ${maxArticles}`);
 });
 
 test('scrape.js CONFIG has three section quotas defined', () => {
@@ -80,8 +80,7 @@ test('scrape.js CONFIG has three section quotas defined', () => {
   assert.match(source, /开源项目/, 'CONFIG should reference 开源项目');
   assert.match(source, /厂商动态/, 'CONFIG should reference 厂商动态');
   assert.match(source, /前沿技术/, 'CONFIG should reference 前沿技术');
-  // Each section should have a quota
-  assert.match(source, /quota:\s*\d+/, 'each section should have a quota field');
+  assert.match(source, /quota:\s*3/, 'each section should now use quota 3');
 });
 
 // ─── Task 2 Tests ────────────────────────────────────────────────────────────
@@ -96,7 +95,7 @@ test('scrape.js generateHTML produces three section headings in the output', () 
   assert.match(source, /前沿技术/, 'generateHTML should reference 前沿技术');
 });
 
-test('generated HTML with three sections passes smoke check (15 cards)', () => {
+test('generated HTML with three sections passes smoke check (9 cards)', () => {
   const tempDir = fs.mkdtempSync(path.join(require('os').tmpdir(), 'ai-agent-weekly-'));
   const htmlPath = path.join(tempDir, 'index.html');
   fs.writeFileSync(htmlPath, makeThreeSectionHtml());
@@ -120,12 +119,12 @@ test('generated HTML with three sections contains section title elements', () =>
   assert.ok(hasFrontier, 'should contain 前沿技术 section');
 });
 
-test('generated HTML with three sections has 15 article cards', () => {
+test('generated HTML with three sections has 9 article cards', () => {
   const html = makeThreeSectionHtml();
   const cheerio = require('cheerio');
   const $ = cheerio.load(html);
   const cards = $('.article-card').length;
-  assert.equal(cards, 15, `Expected 15 article cards, got ${cards}`);
+  assert.equal(cards, 9, `Expected 9 article cards, got ${cards}`);
 });
 
 // ─── Task 3 Tests ────────────────────────────────────────────────────────────

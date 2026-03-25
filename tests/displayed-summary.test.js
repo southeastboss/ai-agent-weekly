@@ -27,7 +27,7 @@ function makeArticle(sectionId, index, extra = {}) {
   };
 }
 
-test('finalizeArticlesForDisplay summarizes only the selected UI articles', async () => {
+test('finalizeArticlesForDisplay summarizes only the selected 9 UI articles', async () => {
   assert.equal(typeof scrape.finalizeArticlesForDisplay, 'function', 'finalizeArticlesForDisplay should be exported');
 
   const articles = [];

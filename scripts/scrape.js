@@ -26,9 +26,9 @@ const { execFileSync } = require('child_process');
 const CONFIG = {
   // 三分区内容配额
   sections: [
-    { id: 'open-source', label: '开源项目', icon: '🛠️', quota: 5 },
-    { id: 'vendor', label: '厂商动态', icon: '🏢', quota: 5 },
-    { id: 'frontier', label: '前沿技术', icon: '🔬', quota: 5 },
+    { id: 'open-source', label: '开源项目', icon: '🛠️', quota: 3 },
+    { id: 'vendor', label: '厂商动态', icon: '🏢', quota: 3 },
+    { id: 'frontier', label: '前沿技术', icon: '🔬', quota: 3 },
   ],
 
   // ── 分区来源配置 ──────────────────────────────────────────────────
@@ -139,7 +139,7 @@ const CONFIG = {
   },
 
   // 每页最多文章数（从所有来源收集更多，确保 RSS 新文章能进入排序）
-  maxArticles: 15,
+  maxArticles: 9,
 
   // 输出路径
   outputFile: path.join(__dirname, '..', 'index.html'),
@@ -971,7 +971,7 @@ function formatBeijingTimestamp(date = new Date()) {
 function generateHTML(articles) {
   const { updateDate, updateTime } = formatBeijingTimestamp();
 
-  // 将文章分配到三个分区（每区配额 5 条）
+  // 将文章分配到三个分区（每区配额 3 条）
   const sectionsHTML = CONFIG.sections.map((section, sIdx) => {
     const start = sIdx * section.quota;
     const slice = articles.slice(start, start + section.quota);
@@ -1339,7 +1339,7 @@ function generateHTML(articles) {
             <p>追踪 AI Agent、具身智能、多智能体系统的最新进展与行业应用</p>
             <div class="hero-stats">
                 <div class="stat-item">
-                    <div class="stat-num">15</div>
+                    <div class="stat-num">9</div>
                     <div class="stat-label">篇精选文章</div>
                 </div>
                 <div class="stat-item">
@@ -1496,3 +1496,4 @@ module.exports = {
   assignArticlesToSections,
   CONFIG,
 };
+
