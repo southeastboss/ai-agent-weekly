@@ -57,7 +57,6 @@ def request_completion(prompt: str, api_key: str) -> str:
     body = {
         "model": MODEL,
         "messages": [{"role": "user", "content": prompt}],
-        "max_tokens": 300,
     }
 
     req = urllib.request.Request(
@@ -70,7 +69,7 @@ def request_completion(prompt: str, api_key: str) -> str:
         method="POST",
     )
 
-    with urllib.request.urlopen(req, timeout=20) as resp:
+    with urllib.request.urlopen(req, timeout=60) as resp:
         data = json.loads(resp.read())
 
     return data["choices"][0]["message"]["content"]

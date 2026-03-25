@@ -34,9 +34,36 @@ class MiniMaxSummaryTests(unittest.TestCase):
     def setUp(self):
         self.env = mock.patch.dict(os.environ, {"MINIMAX_API_KEY": "test-key"}, clear=False)
         self.env.start()
+        self.request_bodies = []
 
     def tearDown(self):
         self.env.stop()
+
+    def fake_urlopen(self, request, timeout=20):
+        self.request_bodies.append(json.loads(request.data.decode("utf-8")))
+        return FakeResponse("这是一个用于测试的中文摘要，长度足够，而且不会混入英文提示词。")
+
+    def test_request_completion_does_not_send_max_tokens_limit(self):
+        with mock.patch.object(minimax_summary.urllib.request, "urlopen", side_effect=self.fake_urlopen):
+            summary = minimax_summary.summarize("OpenAI released GPT-5")
+
+        self.assertTrue(summary)
+        self.assertGreaterEqual(len(self.request_bodies), 1)
+        self.assertNotIn("max_tokens", self.request_bodies[0])
+
+    def test_request_completion_uses_longer_timeout_without_token_limit(self):
+        timeouts = []
+
+        def fake_urlopen_with_timeout(request, timeout=20):
+            timeouts.append(timeout)
+            return FakeResponse("这是一个用于测试的中文摘要，长度足够，而且不会混入英文提示词。")
+
+        with mock.patch.object(minimax_summary.urllib.request, "urlopen", side_effect=fake_urlopen_with_timeout):
+            summary = minimax_summary.summarize("OpenAI released GPT-5")
+
+        self.assertTrue(summary)
+        self.assertGreaterEqual(len(timeouts), 1)
+        self.assertGreaterEqual(timeouts[0], 60)
 
     def test_strips_instruction_prefix_from_summary(self):
         raw = (
