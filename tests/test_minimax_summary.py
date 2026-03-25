@@ -63,7 +63,7 @@ class MiniMaxSummaryTests(unittest.TestCase):
 
         self.assertTrue(summary)
         self.assertGreaterEqual(len(timeouts), 1)
-        self.assertGreaterEqual(timeouts[0], 60)
+        self.assertGreaterEqual(timeouts[0], 180)
 
     def test_strips_instruction_prefix_from_summary(self):
         raw = (

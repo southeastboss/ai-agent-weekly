@@ -69,7 +69,7 @@ def request_completion(prompt: str, api_key: str) -> str:
         method="POST",
     )
 
-    with urllib.request.urlopen(req, timeout=60) as resp:
+    with urllib.request.urlopen(req, timeout=180) as resp:
         data = json.loads(resp.read())
 
     return data["choices"][0]["message"]["content"]
