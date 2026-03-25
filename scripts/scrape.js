@@ -665,51 +665,7 @@ async function generateSummary(article) {
   return article;
 }
 
-async function translateToChinese(text) {
-  if (!text || text.trim().length === 0) return text;
-
-  const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
-
-  async function tryTranslate(provider, attempt = 1) {
-    if (attempt > 2) return null;
-    try {
-      const result = await provider();
-      if (result) return result;
-    } catch (err) {
-      console.warn(`   ⚠️ 翻译失败（尝试 ${attempt}/2）: ${err.message}`);
-    }
-    await sleep(attempt * 800);
-    return tryTranslate(provider, attempt + 1);
-  }
-
-  // MyMemory 免费 API，带重试
-  const tryMyMemory = async () => {
-    const { data } = await axios.get(
-      'https://api.mymemory.translated.net/get',
-      {
-        params: {
-          q: text.substring(0, 500),
-          langpair: 'en|zh',
-          de: 'ai-agent-weekly@proton.me',
-        },
-        timeout: 12000,
-      }
-    );
-    if (data && data.responseStatus === 200 && data.responseData && data.responseData.translatedText) {
-      return data.responseData.translatedText;
-    }
-    return null;
-  };
-
-  const result = await tryTranslate(tryMyMemory);
-  return result || text;
-}
-
-// 标题不做翻译，保持原样
-async function translateTitle(text) {
-  return text;
-}
-
+// 翻译功能已移除
 async function enrichArticle(article) {
   const rawTitle = (article.title || '').replace(/&#039;/g, "'").replace(/\s+/g, ' ').trim();
   const rawDesc = (article.description || '').replace(/&#039;/g, "'").replace(/\s+/g, ' ').trim();
@@ -731,12 +687,10 @@ async function enrichArticle(article) {
         const title = (metaTitle || rawTitle).replace(/&#039;/g, "'").replace(/\s+/g, ' ').replace(/\s*\|\s*GitHub\s*$/i, '').trim();
         const desc = (ghDesc || rawDesc).replace(/&#039;/g, "'").replace(/\s+/g, ' ').trim();
 
-        const [translatedDesc] = await Promise.all([translateToChinese(desc)]);
-
         return {
           ...article,
           title,
-          description: translatedDesc || desc,
+          description: desc,
           image: metaImage || article.image,
         };
       }
@@ -744,10 +698,9 @@ async function enrichArticle(article) {
       // 页面抓取失败不影响
     }
 
-    const [translatedDesc] = await Promise.all([translateToChinese(rawDesc)]);
     return {
       ...article,
-      description: translatedDesc || rawDesc,
+      description: rawDesc,
     };
   }
 
@@ -761,15 +714,11 @@ async function enrichArticle(article) {
 
       const title = (metaTitle || rawTitle).replace(/&#039;/g, "'").replace(/\s+/g, ' ').replace(/\s*\|\s*TechCrunch\s*$/i, '').trim();
       const desc = (metaDesc || rawDesc).replace(/&#039;/g, "'").replace(/\s+/g, ' ').trim();
-      const [translatedTitle, translatedDesc] = await Promise.all([
-        translateTitle(title),
-        translateToChinese(desc),
-      ]);
 
       return {
         ...article,
-        title: translatedTitle || title,
-        description: translatedDesc || desc,
+        title,
+        description: desc,
         date: metaDate ? metaDate.substring(0, 10) : article.date,
         image: metaImage || article.image,
       };
@@ -778,15 +727,10 @@ async function enrichArticle(article) {
     // 页面抓取失败不影响翻译
   }
 
-  const [translatedTitle, translatedDesc] = await Promise.all([
-    translateTitle(rawTitle),
-    translateToChinese(rawDesc),
-  ]);
-
   return {
     ...article,
-    title: translatedTitle || rawTitle,
-    description: translatedDesc || rawDesc,
+    title: rawTitle,
+    description: rawDesc,
   };
 }
 
