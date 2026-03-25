@@ -872,7 +872,7 @@ function generateArticleCard(article, isFeatured = false) {
       // 尝试从文章 URL 提取域名，用 Google Favicon API 获取对应厂商的图标
       try {
         const urlObj = new URL(article.url);
-        imageUrl = `https://www.google.com/s2/favicons?domain=${urlObj.hostname}&sz=128&dpi=2`;
+        imageUrl = `https://www.google.com/s2/favicons?domain=${urlObj.hostname}&sz=512`;
       } catch (_) {
         // URL 解析失败，忽略
       }
