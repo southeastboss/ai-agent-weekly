@@ -163,6 +163,11 @@
             width: 100%; height: 100%; object-fit: cover;
             transition: transform 0.5s ease;
         }
+        /* vendor 分区使用 Google Favicon 图标作为 fallback 时，保持原始尺寸居中显示 */
+        .article-card[data-category="vendor"] .card-thumb img {
+            object-fit: contain;
+            background: #f8fafc;
+        }
         .article-card:hover .card-thumb img { transform: scale(1.06); }
         .article-card .card-content {
             padding: 1.4rem 1.6rem;
@@ -231,6 +236,10 @@
         .featured-card .card-thumb img {
             width: 100%; height: 100%; object-fit: cover;
             transition: transform 0.5s ease;
+        }
+        .featured-card[data-category="vendor"] .card-thumb img {
+            object-fit: contain;
+            background: #f8fafc;
         }
         .featured-card:hover .card-thumb img { transform: scale(1.05); }
         .featured-card .card-content {
@@ -356,7 +365,7 @@
                     <div class="stat-label">更新日期</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-num">18:03</div>
+                    <div class="stat-num">18:53</div>
                     <div class="stat-label">更新时间</div>
                 </div>
             </div>
@@ -375,26 +384,7 @@
         
     <div class="article-card" data-category="open-source">
       <div class="card-thumb">
-        <img src="https://opengraph.githubassets.com/a0ac61f0657fbe43e2cc3f576c6dda28c8653a7b8ce3d8def3455fdb2c8bf206/affaan-m/everything-claude-code" alt="GitHub - affaan-m/everything-claude-code: The agent harness performance optimization system. Skills, instincts, memory, security, and research-first development for Claude Code, Codex, Opencode, Cursor and beyond." loading="lazy">
-      </div>
-      <div class="card-content">
-        <span class="card-tag" style="background:linear-gradient(135deg, #10b981, #059669)">开源</span>
-        <span class="value-tag" style="background:#fef3c7;color:#92400e;margin-left:0.3rem">热门项目</span>
-        <h3 class="card-title">
-          <a href="https://github.com/affaan-m/everything-claude-code" target="_blank">GitHub - affaan-m/everything-claude-code: The agent harness performance optimization system. Skills, instincts, memory, security, and research-first development for Claude Code, Codex, Opencode, Cursor and beyond.</a>
-        </h3>
-        <p class="card-summary">**everything-claude-code**是一个代理工具（Agent）性能优化系统，旨在提升AI编程助手在各平台上的运行效率与安全性</p>
-        <div class="card-tech-tags"><span class="tech-tag" style="background:#e0e7ff;color:#4338ca">LLM</span><span class="tech-tag" style="background:#ede9fe;color:#7c3aed">Agent</span><span class="tech-tag" style="background:#fef3c7;color:#b45309">CodeGen</span></div>
-        <div class="card-meta">
-          <div class="card-extra-meta"><span class="gh-stars">⭐ 106196</span><span class="gh-lang">• JavaScript</span></div>
-          <span class="card-date">2026-03-25</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="article-card" data-category="open-source">
-      <div class="card-thumb">
-        <img src="https://opengraph.githubassets.com/8defcf7390dfffb8ee5e7dd23421e6b69d2dec49a25b3140a1eec8d9ee7843cd/bytedance/deer-flow" alt="GitHub - bytedance/deer-flow: An open-source SuperAgent harness that researches, codes, and creates. With the help of sandboxes, memories, tools, skill, subagents and message gateway, it handles different levels of tasks that could take minutes to hours." loading="lazy">
+        <img src="https://opengraph.githubassets.com/dcdb34f57d38427c1c2a9084f688bcea71559ef82e6c8bb51c15be52903dc695/bytedance/deer-flow" alt="GitHub - bytedance/deer-flow: An open-source SuperAgent harness that researches, codes, and creates. With the help of sandboxes, memories, tools, skill, subagents and message gateway, it handles different levels of tasks that could take minutes to hours." loading="lazy">
       </div>
       <div class="card-content">
         <span class="card-tag" style="background:linear-gradient(135deg, #10b981, #059669)">开源</span>
@@ -402,10 +392,10 @@
         <h3 class="card-title">
           <a href="https://github.com/bytedance/deer-flow" target="_blank">GitHub - bytedance/deer-flow: An open-source SuperAgent harness that researches, codes, and creates. With the help of sandboxes, memories, tools, skill, subagents and message gateway, it handles different levels of tasks that could take minutes to hours.</a>
         </h3>
-        <p class="card-summary">Deer-Flow是由字节跳动开发的开源SuperAgent框架，旨在实现自动化研究、编码与内容创作</p>
+        <p class="card-summary">deer‑flow 是字节跳动开源的 SuperAgent 框架，旨在实现自动化的研究与代码创作</p>
         <div class="card-tech-tags"><span class="tech-tag" style="background:#ede9fe;color:#7c3aed">Agent</span><span class="tech-tag" style="background:#dcfce7;color:#15803d">RAG</span><span class="tech-tag" style="background:#d1fae5;color:#065f46">OpenSource</span></div>
         <div class="card-meta">
-          <div class="card-extra-meta"><span class="gh-stars">⭐ 45026</span><span class="gh-lang">• Python</span></div>
+          <div class="card-extra-meta"><span class="gh-stars">⭐ 45138</span><span class="gh-lang">• Python</span></div>
           <span class="card-date">2026-03-25</span>
         </div>
       </div>
@@ -413,18 +403,37 @@
 
     <div class="article-card" data-category="open-source">
       <div class="card-thumb">
-        <img src="https://repository-images.githubusercontent.com/969302809/aa138f0d-163b-4951-a89d-468747b05058" alt="GitHub - hesreallyhim/awesome-claude-code: A curated list of awesome skills, hooks, slash-commands, agent orchestrators, applications, and plugins for Claude Code by Anthropic" loading="lazy">
+        <img src="https://opengraph.githubassets.com/62ff6c8df61a48222aabcd6c7b4956d570e975641868c42ab1e76a2b9cb6b70f/BerriAI/litellm" alt="GitHub - BerriAI/litellm: Python SDK, Proxy Server (AI Gateway) to call 100+ LLM APIs in OpenAI (or native) format, with cost tracking, guardrails, loadbalancing and logging. [Bedrock, Azure, OpenAI, VertexAI, Cohere, Anthropic, Sagemaker, HuggingFace, VLLM, NVIDIA NIM]" loading="lazy">
       </div>
       <div class="card-content">
         <span class="card-tag" style="background:linear-gradient(135deg, #10b981, #059669)">开源</span>
         <span class="value-tag" style="background:#fef3c7;color:#92400e;margin-left:0.3rem">热门项目</span>
         <h3 class="card-title">
-          <a href="https://github.com/hesreallyhim/awesome-claude-code" target="_blank">GitHub - hesreallyhim/awesome-claude-code: A curated list of awesome skills, hooks, slash-commands, agent orchestrators, applications, and plugins for Claude Code by Anthropic</a>
+          <a href="https://github.com/BerriAI/litellm" target="_blank">GitHub - BerriAI/litellm: Python SDK, Proxy Server (AI Gateway) to call 100+ LLM APIs in OpenAI (or native) format, with cost tracking, guardrails, loadbalancing and logging. [Bedrock, Azure, OpenAI, VertexAI, Cohere, Anthropic, Sagemaker, HuggingFace, VLLM, NVIDIA NIM]</a>
         </h3>
-        <p class="card-summary">awesome-claude-code 是一个面向 Anthropic Claude Code 的精选资源清单，汇集了社区贡献的技能（skills）、钩子（hooks）、斜杠命令（slash‑commands）、智能体编排器（agent orchestrators）、应用和插件</p>
+        <p class="card-summary">LiteLLM是一个功能强大的Python SDK和代理服务器（AI网关），旨在简化大语言模型（LLM）的调用过程</p>
+        <div class="card-tech-tags"><span class="tech-tag" style="background:#e0e7ff;color:#4338ca">LLM</span><span class="tech-tag" style="background:#f1f5f9;color:#475569">Inference</span><span class="tech-tag" style="background:#d1fae5;color:#065f46">OpenSource</span></div>
+        <div class="card-meta">
+          <div class="card-extra-meta"><span class="gh-stars">⭐ 40410</span><span class="gh-lang">• Python</span></div>
+          <span class="card-date">2026-03-25</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="article-card" data-category="open-source">
+      <div class="card-thumb">
+        <img src="https://opengraph.githubassets.com/ebf4d488ddfe83e0df23bb45e0cec344b92b63c7da98ccfdb5564a99564980ea/hsliuping/TradingAgents-CN" alt="GitHub - hsliuping/TradingAgents-CN: 基于多智能体LLM的中文金融交易框架 - TradingAgents中文增强版" loading="lazy">
+      </div>
+      <div class="card-content">
+        <span class="card-tag" style="background:linear-gradient(135deg, #10b981, #059669)">开源</span>
+        <span class="value-tag" style="background:#fef3c7;color:#92400e;margin-left:0.3rem">热门项目</span>
+        <h3 class="card-title">
+          <a href="https://github.com/hsliuping/TradingAgents-CN" target="_blank">GitHub - hsliuping/TradingAgents-CN: 基于多智能体LLM的中文金融交易框架 - TradingAgents中文增强版</a>
+        </h3>
+        <p class="card-summary">TradingAgents-CN是基于多智能体大语言模型的中文金融交易框架，提供从数据获取、因子构建、策略生成到订单执行的完整流程</p>
         <div class="card-tech-tags"><span class="tech-tag" style="background:#e0e7ff;color:#4338ca">LLM</span><span class="tech-tag" style="background:#ede9fe;color:#7c3aed">Agent</span><span class="tech-tag" style="background:#d1fae5;color:#065f46">OpenSource</span></div>
         <div class="card-meta">
-          <div class="card-extra-meta"><span class="gh-stars">⭐ 32207</span><span class="gh-lang">• Python</span></div>
+          <div class="card-extra-meta"><span class="gh-stars">⭐ 21119</span><span class="gh-lang">• Python</span></div>
           <span class="card-date">2026-03-25</span>
         </div>
       </div>
@@ -442,7 +451,7 @@
         
     <div class="article-card" data-category="vendor">
       <div class="card-thumb">
-        <img src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&h=400&fit=crop&q=80" alt="How we monitor internal coding agents for misalignment" loading="lazy">
+        <img src="https://www.google.com/s2/favicons?domain=openai.com&sz=128&dpi=2" alt="How we monitor internal coding agents for misalignment" loading="lazy">
       </div>
       <div class="card-content">
         <span class="card-tag" style="background:linear-gradient(135deg, #8b5cf6, #c026d3)">OpenAI</span>
@@ -450,7 +459,7 @@
         <h3 class="card-title">
           <a href="https://openai.com/index/how-we-monitor-internal-coding-agents-misalignment" target="_blank">How we monitor internal coding agents for misalignment</a>
         </h3>
-        <p class="card-summary">OpenAI通过思维链（chain‑of‑thought）监控内部编程智能体的行为轨迹，实时捕获其推理步骤并分析潜在错位风险</p>
+        <p class="card-summary">本文介绍了OpenAI在内部编程代理中利用链式思维监控检测行为偏差的方法</p>
         <div class="card-tech-tags"><span class="tech-tag" style="background:#e0e7ff;color:#4338ca">LLM</span><span class="tech-tag" style="background:#ede9fe;color:#7c3aed">Agent</span><span class="tech-tag" style="background:#fef3c7;color:#b45309">CodeGen</span></div>
         <div class="card-meta">
           <div></div>
@@ -461,7 +470,7 @@
 
     <div class="article-card" data-category="vendor">
       <div class="card-thumb">
-        <img src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&h=400&fit=crop&q=80" alt="Introducing GPT-5.4 mini and nano" loading="lazy">
+        <img src="https://www.google.com/s2/favicons?domain=openai.com&sz=128&dpi=2" alt="Introducing GPT-5.4 mini and nano" loading="lazy">
       </div>
       <div class="card-content">
         <span class="card-tag" style="background:linear-gradient(135deg, #8b5cf6, #c026d3)">OpenAI</span>
@@ -469,7 +478,7 @@
         <h3 class="card-title">
           <a href="https://openai.com/index/introducing-gpt-5-4-mini-and-nano" target="_blank">Introducing GPT-5.4 mini and nano</a>
         </h3>
-        <p class="card-summary">本文正式推出 GPT‑5.4 的两款轻量化衍生版本——GPT‑5.4 mini 与 GPT‑5.4 nano</p>
+        <p class="card-summary">GPT‑5.4 mini 与 nano 是 GPT‑5.4 的轻量化版本，专为代码生成、工具调用、多模态推理以及高吞吐量 API 与子代理工作负载而优化</p>
         <div class="card-tech-tags"><span class="tech-tag" style="background:#e0e7ff;color:#4338ca">LLM</span><span class="tech-tag" style="background:#ede9fe;color:#7c3aed">Agent</span><span class="tech-tag" style="background:#fef3c7;color:#b45309">CodeGen</span></div>
         <div class="card-meta">
           <div></div>
@@ -480,7 +489,7 @@
 
     <div class="article-card" data-category="vendor">
       <div class="card-thumb">
-        <img src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&h=400&fit=crop&q=80" alt="Powering product discovery in ChatGPT" loading="lazy">
+        <img src="https://www.google.com/s2/favicons?domain=openai.com&sz=128&dpi=2" alt="Powering product discovery in ChatGPT" loading="lazy">
       </div>
       <div class="card-content">
         <span class="card-tag" style="background:linear-gradient(135deg, #8b5cf6, #c026d3)">OpenAI</span>
@@ -488,7 +497,7 @@
         <h3 class="card-title">
           <a href="https://openai.com/index/powering-product-discovery-in-chatgpt" target="_blank">Powering product discovery in ChatGPT</a>
         </h3>
-        <p class="card-summary">ChatGPT通过代理商业协议（Agentic Commerce Protocol）提供更丰富的视觉沉浸式购物体验，支持精准商品发现、同类对比以及商家无缝接入，帮助用户快速做出高效的消费决策，并通过AI推荐实现个性化购物路径</p>
+        <p class="card-summary">ChatGPT通过Agentic Commerce Protocol实现沉浸式购物体验，支持多模态产品展示与智能发现，提供同类商品的并排对比功能，并通过标准化接口与商家系统深度对接，覆盖从浏览、比较、下单到售后的全链路服务，显著提升电商效率与用户购物满意度</p>
         <div class="card-tech-tags"><span class="tech-tag" style="background:#e0e7ff;color:#4338ca">LLM</span><span class="tech-tag" style="background:#ede9fe;color:#7c3aed">Agent</span></div>
         <div class="card-meta">
           <div></div>
@@ -517,7 +526,7 @@
         <h3 class="card-title">
           <a href="https://techcrunch.com/2026/03/24/anthropic-hands-claude-code-more-control-but-keeps-it-on-a-leash/" target="_blank">Anthropic hands Claude Code more control, but keeps it on a leash</a>
         </h3>
-        <p class="card-summary">Anthropic 为 Claude Code 推出自动模式，赋予 AI 在执行任务时更少的审批环节，实现更高自主性</p>
+        <p class="card-summary">Anthropic 为 Claude Code 推出自动模式，让 AI 在执行任务时获得更大自主权，降低人工审批频次</p>
         <div class="card-tech-tags"><span class="tech-tag" style="background:#e0e7ff;color:#4338ca">LLM</span><span class="tech-tag" style="background:#fef9c3;color:#854d0e">Safety</span><span class="tech-tag" style="background:#ccfbf1;color:#0f766e">Robotics</span></div>
         <div class="card-meta">
           <div></div>
@@ -536,7 +545,7 @@
         <h3 class="card-title">
           <a href="https://www.artificialintelligence-news.com/news/nvidia-agent-toolkit-enterprise-ai-agents/" target="_blank">NVIDIA wants enterprise AI agents safer to deploy</a>
         </h3>
-        <p class="card-summary">NVIDIA 在 GTC 2026 上发布 Agent Toolkit，为企业提供开源软件平台，用于快速构建、训练并部署自主 AI 代理</p>
+        <p class="card-summary">NVIDIA在2026年GTC大会上推出企业级Agent Toolkit，提供开源完整框架，帮助企业快速构建、测试并部署自主AI代理</p>
         <div class="card-tech-tags"><span class="tech-tag" style="background:#ede9fe;color:#7c3aed">Agent</span><span class="tech-tag" style="background:#d1fae5;color:#065f46">OpenSource</span><span class="tech-tag" style="background:#ccfbf1;color:#0f766e">Robotics</span></div>
         <div class="card-meta">
           <div></div>
@@ -555,7 +564,7 @@
         <h3 class="card-title">
           <a href="https://techcrunch.com/2026/03/24/openais-sora-was-the-creepiest-app-on-your-phone-now-its-shutting-down/" target="_blank">OpenAI’s Sora was the creepiest app on your phone -- now it's shutting down</a>
         </h3>
-        <p class="card-summary">开放人工智能的短视频社交应用 Sora 曾因生成内容的“毛骨悚然”效果引发热议</p>
+        <p class="card-summary">OpenAI 推出的短视频平台 Sora 曾因内容全部由 AI 生成、交互方式怪异而被称作“史上最恐怖的手机 App”，但用户对纯 AI 社交信息流缺乏持续兴趣，导致该产品即将关闭</p>
         <div class="card-tech-tags"><span class="tech-tag" style="background:#e0e7ff;color:#4338ca">LLM</span><span class="tech-tag" style="background:#fce7f3;color:#be185d">Multimodal</span></div>
         <div class="card-meta">
           <div></div>
