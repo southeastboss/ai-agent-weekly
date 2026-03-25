@@ -644,6 +644,7 @@ function extractArticles($, source, rssText) {
  */
 /**
  * 使用 MiniMax AI 生成中文摘要（100-200 字）
+ * 中国区使用 api.minimaxi.com 接口
  */
 async function generateSummary(article) {
   if (!article.title || !article.description) return article;
@@ -656,14 +657,14 @@ async function generateSummary(article) {
 新闻内容：${text}`;
 
   try {
-    const response = await fetch('https://api.minimax.chat/v1/text/chatcompletion_v2', {
+    const response = await fetch('https://api.minimaxi.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${process.env.MINIMAX_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'MiniMax-Text-01',
+        model: 'MiniMax-M2.5-highspeed',
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 300,
       }),
