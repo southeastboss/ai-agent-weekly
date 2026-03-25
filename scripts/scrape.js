@@ -867,25 +867,25 @@ function generateArticleCard(article, isFeatured = false) {
     'frontier':    'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=800&h=400&fit=crop&q=80',
   };
 
+  // 主图 URL：og:image 优先
   let imageUrl = article.image;
 
-  // 厂商 Logo 的最终兜底 URL（用于 onerror）
-  let vendorLogoFallback = sectionFallbacks['vendor'];
+  // 厂商 Logo URL（在任何分支都先计算出来）
+  let vendorLogoUrl = null;
 
-  if (!imageUrl) {
-    if (article.sourceCategory === 'vendor' && article.url) {
-      try {
-        const urlObj = new URL(article.url);
-        const logoName = urlObj.hostname.replace('www.', '').replace('.com', '');
+  if (article.sourceCategory === 'vendor' && article.url) {
+    try {
+      const urlObj = new URL(article.url);
+      const logoName = urlObj.hostname.replace('www.', '').replace('.com', '');
+      const KNOWN_LOGOS = {
+        'openai.com':    'https://openai.com/content/images/logos/openai-glyph-logo.svg',
+        'anthropic.com': 'https://www.anthropic.com/images/logo/anthropic-logo.svg',
+        'google.com':    'https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png',
+      };
+      vendorLogoUrl = KNOWN_LOGOS[urlObj.hostname] || null;
+      if (!imageUrl) {
         const pngPath = path.join(__dirname, '..', 'assets', 'vendor-logos', logoName + '.png');
         const svgPath = path.join(__dirname, '..', 'assets', 'vendor-logos', logoName + '.svg');
-        // 已知厂商 Logo 直接映射（作为兜底图）
-        const KNOWN_LOGOS = {
-          'openai.com':    'https://openai.com/content/images/logos/openai-glyph-logo.svg',
-          'anthropic.com': 'https://www.anthropic.com/images/logo/anthropic-logo.svg',
-          'google.com':    'https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png',
-        };
-        vendorLogoFallback = KNOWN_LOGOS[urlObj.hostname] || null;
         if (fs.existsSync(pngPath)) {
           imageUrl = `assets/vendor-logos/${logoName}.png`;
         } else if (fs.existsSync(svgPath)) {
@@ -893,19 +893,28 @@ function generateArticleCard(article, isFeatured = false) {
         } else {
           imageUrl = `https://img.logo.dev/${urlObj.hostname}.png?size=512`;
         }
-      } catch (_) {
-        // URL 解析失败，忽略
       }
-    }
-    if (!imageUrl) {
-      imageUrl = sectionFallbacks[article.sourceCategory] || 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&h=400&fit=crop&q=80';
+    } catch (_) {}
+  }
+
+  // 开源/前沿项目没有 og:image 时，用对应默认图作为主图
+  if (!imageUrl) {
+    if (article.sourceCategory === 'open-source') {
+      imageUrl = sectionFallbacks['open-source'];
+    } else if (article.sourceCategory === 'frontier') {
+      imageUrl = sectionFallbacks['frontier'];
     }
   }
 
   // 确定最终的 onerror 兜底图
-  const fallbackUrl = article.sourceCategory === 'vendor' && vendorLogoFallback
-    ? vendorLogoFallback
-    : (sectionFallbacks[article.sourceCategory] || 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&h=400&fit=crop&q=80');
+  let fallbackUrl;
+  if (article.sourceCategory === 'vendor' && vendorLogoUrl) {
+    // 厂商：onerror 时用厂商 Logo（不管 og:image 是否存在）
+    fallbackUrl = vendorLogoUrl;
+  } else {
+    fallbackUrl = sectionFallbacks[article.sourceCategory]
+      || 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&h=400&fit=crop&q=80';
+  }
 
 
   const tagMap = {
