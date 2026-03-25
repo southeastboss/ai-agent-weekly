@@ -650,11 +650,7 @@ async function generateSummary(article) {
   if (!article.title || !article.description) return article;
 
   const text = `${article.title}。${article.description}`.substring(0, 500);
-  const prompt = `请用中文为这篇新闻写一段简短的摘要，要求：
-1. 字数控制在 100 到 200 字之间
-2. 提取文章的核心内容和价值
-3. 语言简洁专业
-新闻内容：${text}`;
+  const prompt = `请直接输出一段该新闻的中文摘要，100-200字，提取核心内容和价值，语言简洁专业。新闻内容：${text}`;
 
   try {
     const response = await fetch('https://api.minimaxi.com/v1/chat/completions', {
