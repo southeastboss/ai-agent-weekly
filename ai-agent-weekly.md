@@ -108,30 +108,51 @@
 
 ---
 
-### 2.6 图片问题已修复
+### 2.6 图片策略（含默认图 fallback）
 
-图片曾经存在两个阶段：
+图片逻辑经历过多个阶段，当前已收敛到以下规则：
 
-#### 阶段 1：随机占位图
-因为某些文章来源页拿不到图片，页面使用了：
-- `picsum.photos` 随机图作为占位
+#### 当前图片规则（2026-03-26 修订）
 
-问题：
-- 图和文章内容不匹配
-- 用户体验较差
+**开源项目分区：**
+- 优先：文章 `og:image`
+- fallback：`https://github.githubassets.com/images/modules/logos_page/GitHub-Logo.png`
 
-#### 阶段 2：真实文章配图
-后续排查发现：
-- `enrichArticle()` 逻辑里存在变量名错误（`generatedTitle`）
-- 该 bug 导致 enrich 过程提前异常
-- 于是拿不到 `og:image`，才退回成随机图
+**厂商动态分区：**
+- 优先：文章 `og:image`
+- fallback：本地 `assets/vendor-logos/{vendor}.svg`（优先）或 `.png`
+- onerror 二级 fallback：厂商官方 Logo URL
 
-修复后：
-- 页面现在优先使用真实文章来源的 `og:image`
-- TechCrunch 类文章已能正确显示真实配图
-- 只有在确实抓不到图片时，才应考虑占位图兜底
+**前沿技术分区：**
+- 优先：文章 `og:image`
+- fallback：`https://images.unsplash.com/photo-1485827404703-89b55fcc595e`
 
-这是当前版本里一个很关键的质量提升。
+#### 本地厂商 Logo 资源
+
+当前 `assets/vendor-logos/` 下有以下资源：
+- `openai.svg`（OpenAI knot SVG，2026-03-26 新增，优先使用）
+- `anthropic.svg`（Anthropic logo SVG）
+- `google.png`（Google logo PNG）
+- ~~`openai.png`~~（已删除，容易被误认为 GitHub 风格）
+
+#### 本地 Logo 查找逻辑（2026-03-26 更新）
+
+```javascript
+// 优先 svg，其次 png
+if (fs.existsSync(svgPath)) {
+  imageUrl = `assets/vendor-logos/${logoName}.svg`;
+} else if (fs.existsSync(pngPath)) {
+  imageUrl = `assets/vendor-logos/${logoName}.png`;
+} else {
+  imageUrl = `https://img.logo.dev/${hostname}.png?size=512`;
+}
+```
+
+#### 历史教训
+
+1. **不能用 GitHub 风格的图做厂商 Logo**：`openai.png` 看起来像 GitHub，被用户投诉，已删除
+2. **不能用 logo.dev 做主图**：logo.dev 的图本身就有 GitHub 风格，要作为最后 fallback
+3. **GitHub Actions 的 curl 下载步骤会破坏已有文件**：workflow 里曾经有个 "Download vendor logos" 步骤，curl 404 时会覆盖本地正确文件，已移除
 
 ---
 
@@ -157,18 +178,16 @@
 
 ### 2.8 测试与校验
 
-目前仓库已有基础校验：
-- `tests/workflow-smoke.test.js`
-- `tests/beijing-timezone.test.js`
-- `scripts/smoke-check.js`
+目前仓库已有完整测试套件（`npm test`）：
+- `tests/workflow-smoke.test.js`：检查 workflow 配置
+- `tests/beijing-timezone.test.js`：检查时区逻辑
+- `tests/thumbnail-fallback.test.js`（2026-03-26 新增）：回归测试，覆盖：
+  - 开源文章有 og:image 时保持 og:image，onerror → GitHub Logo
+  - 厂商文章有 og:image 时保持 og:image，onerror → 厂商官方 Logo
+  - 厂商文章无图片时用本地 `openai.svg`，onerror → 厂商官方 Logo
+- `scripts/smoke-check.js`：生成 HTML 后自检
 
-已具备的能力：
-- 检查 workflow 中 scrape 和 smoke-check 的顺序
-- 检查 Node/GitHub Actions 关键配置
-- 检查生成 HTML 至少包含 featured/article cards
-- 检查时间逻辑显式使用 `Asia/Shanghai`
-
-虽然测试覆盖还不高，但比纯"拍脑袋部署"已经成熟很多。
+所有测试通过（7/7），确保图片 fallback 规则不再回归。
 
 ---
 
@@ -208,9 +227,10 @@
 
 这个文档需要同步。
 
----
+### 4.2 ✅ 已修复：删除了破坏性的 "Download vendor logos" workflow 步骤
+GitHub Actions workflow 里曾经有个 "Download vendor logos" 步骤，该步骤用 curl 下载厂商 Logo，失败时（404）会覆盖本地已有文件，造成 logo 被替换成 HTML 错误页面。已从 workflow 中移除，厂商 Logo 统一使用 `assets/vendor-logos/` 下已提交的静态资源。
 
-### 4.2 调试脚本偏多
+### 4.3 调试脚本偏多
 
 仓库里存在一些临时/调试性质文件，例如：
 - `test-fetch.js`
