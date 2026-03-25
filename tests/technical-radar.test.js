@@ -141,3 +141,9 @@ test('generated HTML contains responsive section styling', () => {
   // Should have at least one media query or flex/grid layout for sections
   assert.match(source, /@media|flex|grid/, 'section layout should use responsive CSS');
 });
+
+test('generated HTML no longer renders source labels in cards or page note', () => {
+  const source = fs.readFileSync(scrapePath, 'utf8');
+  assert.doesNotMatch(source, /<div class="card-source">/, 'card source block should not be rendered');
+  assert.doesNotMatch(source, /<div class="source-note">/, 'page source note should not be rendered');
+});

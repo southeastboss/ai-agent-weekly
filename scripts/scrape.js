@@ -953,10 +953,7 @@ function generateArticleCard(article, isFeatured = false) {
         </h2>
         ${article.summary ? `<p class="card-summary">${article.summary}</p>` : `<p class="card-desc">${article.description}</p>`}
         <div class="card-footer">
-          <div class="card-source">
-            <span class="icon" style="background:${tagInfo.bg.split(',')[0].replace('linear-gradient(135deg, ', '')}">${article.title.charAt(0)}</span>
-            artificialintelligence-news.com · ${article.date}
-          </div>
+          <span class="card-date">${article.date}</span>
           <a href="${article.url}" target="_blank" class="read-btn">阅读原文 →</a>
         </div>
       </div>
@@ -977,11 +974,7 @@ function generateArticleCard(article, isFeatured = false) {
         ${article.summary ? `<p class="card-summary">${article.summary}</p>` : `<p class="card-desc">${article.description}</p>`}
         ${techTagsHTML ? `<div class="card-tech-tags">${techTagsHTML}</div>` : ''}
         <div class="card-meta">
-          <div class="card-source">
-            <span class="icon" style="background:${tagInfo.bg.split(',')[0].replace('linear-gradient(135deg, ', '')}">${article.title.charAt(0)}</span>
-            artificialintelligence-news.com
-            ${extraMeta}
-          </div>
+          ${extraMeta ? `<div class="card-extra-meta">${extraMeta}</div>` : '<div></div>'}
           <span class="card-date">${article.date}</span>
         </div>
       </div>
@@ -1253,12 +1246,7 @@ function generateHTML(articles) {
             border-top: 1px solid var(--border);
             transition: border-color 0.4s ease;
         }
-        .article-card .card-source { display: flex; align-items: center; gap: 0.5rem; color: var(--text-muted); font-size: 0.8rem; }
-        .article-card .card-source .icon {
-            width: 20px; height: 20px; border-radius: 5px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 10px; color: white; font-weight: 700;
-        }
+        .article-card .card-extra-meta { display: flex; align-items: center; gap: 0.5rem; color: var(--text-muted); font-size: 0.8rem; flex-wrap: wrap; }
         .article-card .card-date { color: var(--text-muted); font-size: 0.78rem; }
         .featured-card {
             background: var(--card-bg); border: 1px solid var(--border);
@@ -1303,12 +1291,6 @@ function generateHTML(articles) {
             padding: 0.6rem 1rem; border-radius: 6px;
         }
         .featured-card .card-footer { display: flex; align-items: center; justify-content: space-between; }
-        .featured-card .card-source { display: flex; align-items: center; gap: 0.5rem; color: var(--text-muted); font-size: 0.82rem; }
-        .featured-card .card-source .icon {
-            width: 22px; height: 22px; border-radius: 6px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 11px; color: white; font-weight: 700;
-        }
         .read-btn {
             display: inline-flex; align-items: center; gap: 0.4rem;
             padding: 0.5rem 1.2rem; border-radius: 50px;
@@ -1317,8 +1299,6 @@ function generateHTML(articles) {
             text-decoration: none; transition: all 0.3s ease;
         }
         .read-btn:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(99,102,241,0.4); }
-        .source-note { text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.82rem; border-top: 1px solid var(--border); margin-top: 2.5rem; transition: border-color 0.4s ease; }
-        .source-note a { color: var(--primary); text-decoration: none; }
         footer { text-align: center; padding: 2rem; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 0.8rem; transition: border-color 0.4s ease; }
         footer a { color: var(--primary); text-decoration: none; }
         .progress-bar { position: fixed; top: 64px; left: 0; height: 3px; background: var(--gradient-1); z-index: 999; transition: width 0.1s; }
@@ -1416,11 +1396,6 @@ function generateHTML(articles) {
     <main>
         ${sectionsHTML}
 
-        <div class="source-note">
-            📡 数据来源：<a href="https://www.artificialintelligence-news.com/" target="_blank">artificialintelligence-news.com</a> · 
-            自动抓取 · 更新时间：${updateDate} ${updateTime}
-        </div>
-
         <div id="emptyState" class="empty-state">
             <div class="empty-icon">🔍</div>
             <p>该分类下暂无文章</p>
@@ -1428,7 +1403,7 @@ function generateHTML(articles) {
     </main>
 
     <footer>
-        <p>AI Agent 前沿动态 | 数据来源：artificialintelligence-news.com（每日自动更新）</p>
+        <p>AI Agent 前沿动态 | 每日自动更新</p>
     </footer>
 
     <script>
