@@ -1,5 +1,7 @@
 # ai-agent-weekly 项目进展与后续计划
 
+> 维护约定：以后每次针对 `ai-agent-weekly` 项目做修改时，都要同步更新这份 `ai-agent-weekly.md`，确保文档与实际状态保持一致。
+
 ## 1. 项目概览
 
 `ai-agent-weekly` 是一个基于 **Node.js + GitHub Actions + GitHub Pages** 的静态资讯站点，目标是每天自动汇总 AI Agent 相关资讯，并生成一个可直接访问的网页。
