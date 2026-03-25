@@ -872,7 +872,7 @@ function generateArticleCard(article, isFeatured = false) {
       // 尝试从文章 URL 提取域名，用 Google Favicon API 获取对应厂商的图标
       try {
         const urlObj = new URL(article.url);
-        imageUrl = `https://www.google.com/s2/favicons?domain=${urlObj.hostname}&sz=512`;
+        imageUrl = `https://logo.clearbit.com/${urlObj.hostname}`;
       } catch (_) {
         // URL 解析失败，忽略
       }
@@ -948,7 +948,7 @@ function generateArticleCard(article, isFeatured = false) {
     return `
     <div class="featured-card" data-category="${article.sourceCategory}">
       <div class="card-thumb">
-        <img src="${imageUrl}" alt="${article.title}" loading="lazy">
+        <img src="${imageUrl}" alt="${article.title}" loading="lazy" onerror="if(this.src!=='${sectionFallbacks[article.sourceCategory]}'){this.src='${sectionFallbacks[article.sourceCategory]}';this.onerror=null}">
         <div class="overlay" style="position:absolute;inset:0;background:linear-gradient(to right,rgba(0,0,0,0.3),transparent)"></div>
       </div>
       <div class="card-content">
@@ -968,7 +968,7 @@ function generateArticleCard(article, isFeatured = false) {
   return `
     <div class="article-card" data-category="${article.sourceCategory}">
       <div class="card-thumb">
-        <img src="${imageUrl}" alt="${article.title}" loading="lazy">
+        <img src="${imageUrl}" alt="${article.title}" loading="lazy" onerror="if(this.src!=='${sectionFallbacks[article.sourceCategory]}'){this.src='${sectionFallbacks[article.sourceCategory]}';this.onerror=null}">
       </div>
       <div class="card-content">
         <span class="card-tag" style="background:${tagInfo.bg}">${tagInfo.label}</span>
