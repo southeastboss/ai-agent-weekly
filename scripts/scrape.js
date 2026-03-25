@@ -672,8 +672,20 @@ async function generateSummary(article) {
     const data = await response.json();
     const content = data?.choices?.[0]?.message?.content;
     if (content) {
-      const summary = content.trim().substring(0, 200);
-      return { ...article, summary };
+      // 去掉 prompt 指令部分，只保留真正的摘要内容
+      // 常见指令标记：包含"请直接输出"、prompt 本身、或"新闻内容："之后才是正文
+      let summary = content;
+      const markerIdx = summary.lastIndexOf('新闻内容：');
+      if (markerIdx !== -1) {
+        summary = summary.substring(markerIdx + 5);
+      } else {
+        // 去掉开头可能包含的 prompt 重复文字
+        summary = summary.replace(/^请[用将]中文[为把].*?新闻内容[：:]\s*/s, '');
+        summary = summary.replace(/^请直接输出.*?\n*/s, '');
+        summary = summary.replace(/^让我[分分]析.*?新闻内容[：:]\s*/s, '');
+      }
+      summary = summary.trim().substring(0, 200);
+      if (summary) return { ...article, summary };
     }
   } catch (err) {
     console.warn(`   ⚠️ AI 摘要生成失败，使用截断摘要: ${err.message}`);
