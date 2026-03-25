@@ -276,6 +276,17 @@ const AD_KEYWORDS = ['newsletter', 'sponsored', 'advertisement', 'advert', 'news
 const PR_PATTERNS = [/^pr[:\s]/i, /^\[pr\]/i, /robot[\s-]?generated/i, /automated[\s-]?post/i, /爬虫/i, /^auto[\s-]?post/i];
 const LOW_QUALITY_PATTERNS = [/^click here/i, /^read more/i, /^learn more/i, /^\s*$/];
 
+// challenge / WAF / 反爬拦截页面标题特征（命中这些说明拿到的不是真实文章页）
+const CHALLENGE_TITLE_PATTERNS = [
+  /just a moment/i,
+  /checking your browser/i,
+  /access denied/i,
+  /403 forbidden/i,
+  /cloudflare/i,
+  /attention required/i,
+  /security check/i,
+];
+
 function isLowQuality(article) {
   const title = article.title || '';
   const desc = article.description || '';
@@ -745,6 +756,17 @@ async function enrichArticle(article) {
       const metaDesc = $('meta[property="og:description"]').attr('content') || $('meta[name="description"]').attr('content') || '';
       const metaDate = $('meta[property="article:published_time"]').attr('content') || '';
       const metaImage = $('meta[property="og:image"]').attr('content') || '';
+
+      const isChallenge = CHALLENGE_TITLE_PATTERNS.some(p => p.test(metaTitle));
+
+      if (isChallenge) {
+        console.warn(`   ⚠️ 检测到拦截页，保留原始标题: ${article.url}`);
+        return {
+          ...article,
+          title: rawTitle,
+          description: rawDesc,
+        };
+      }
 
       const title = (metaTitle || rawTitle).replace(/&#039;/g, "'").replace(/\s+/g, ' ').replace(/\s*\|\s*TechCrunch\s*$/i, '').trim();
       const desc = (metaDesc || rawDesc).replace(/&#039;/g, "'").replace(/\s+/g, ' ').trim();

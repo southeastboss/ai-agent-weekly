@@ -2,7 +2,7 @@
 
 > 维护约定：以后每次针对 `ai-agent-weekly` 项目做修改时，都要同步更新这份 `ai-agent-weekly.md`，确保文档与实际状态保持一致。
 >
-> 补充约定（2026-03-25）：页面前台不展示“数据来源”文案；来源信息仅保留在程序内部，用于抓取、分区、打分和过滤。
+> 补充约定（2026-03-25）：页面前台不展示"数据来源"文案；来源信息仅保留在程序内部，用于抓取、分区、打分和过滤。
 
 ## 1. 项目概览
 
@@ -96,14 +96,15 @@
 当前摘要体验比早期版本稳定很多。
 
 补充修复（2026-03-25）：
-- 修复了 MiniMax 摘要中偶发混入提示词前缀（如“为以下内容写100-200字中文摘要：”）的问题
+- 修复了 MiniMax 摘要中偶发混入提示词前缀（如"为以下内容写100-200字中文摘要："）的问题
 - 增加了摘要结果清洗：去掉 prompt 回显、`Summary:` / `摘要：` 等前缀，以及 think 残留
 - 当首轮返回仍偏英文或不符合要求时，会自动使用更严格提示再请求一次，优先拿到纯中文摘要
 - 为上述问题新增了 Python 回归测试：`tests/test_minimax_summary.py`
 - 进一步修复了 MiniMax 摘要长推理导致正文被截断的问题：移除了请求体中的 `max_tokens: 300`，并将接口超时从 20 秒提高到 180 秒，避免只拿到 `<think>` 而拿不到最终中文摘要
 - 调整摘要生成时机：不再对所有抓取到的候选文章做摘要，而是先完成过滤、打分、分区选稿，最后只对界面上实际展示的文章生成摘要；当前页面规模为 9 篇（3 个分区 × 每区 3 篇），因此只对这 9 篇做 MiniMax 摘要，减少无效调用并避免 workflow 被非展示内容拖慢
 - 同步修复 Node 侧调用 Python 摘要脚本的子进程超时：`scripts/scrape.js` 中 `execFileSync(..., timeout)` 从 20 秒提升到 180 秒，避免 Python 还没返回就被上层提前杀掉
-- 新增 Node 回归测试：`tests/displayed-summary.test.js`，覆盖“只摘要展示文章”和“Node 子进程超时为 180 秒”两个关键行为
+- 新增 Node 回归测试：`tests/displayed-summary.test.js`，覆盖"只摘要展示文章"和"Node 子进程超时为 180 秒"两个关键行为
+- 新增 challenge/WAF 拦截页保护：若详情页抓取返回的是 `Just a moment...`、`Checking your browser...`、`Access denied` 等拦截页标题，则不再覆盖原始 RSS 标题和描述，保留原始内容；新增回归测试：`tests/challenge-page.test.js`
 
 ---
 
@@ -354,8 +355,8 @@
 ### 已完成（Chunk 3）
 - **技术标签（techTags）**：12 类技术标签（LLM、Agent、RAG、CodeGen、Multimodal、Embedding、Finetuning、Inference、Safety、OpenSource、Robotics、Research），基于 `TECH_TAG_VOCABULARY` 关键词匹配推断，每篇文章最多显示 3 个标签
 - **价值标签（valueTag）**：根据分区（开源/厂商/前沿）和内容关键词推断，包括「热门项目」「实用工具」「模型发布」「平台更新」「学术成果」「Agent 突破」「具身智能」等标签，带颜色样式渲染到卡片中
-- **技术价值评分函数 `scoreArticle(article)`**：6 维评分体系——新鲜度（指数衰减，7 天半衰期）、来源可信度（`SOURCE_QUALITY_WEIGHTS`）、GitHub stars（对数加成）、描述质量（有意义长度加成）、技术标签加成、有图加成
-- **质量过滤函数 `filterArticles(articles)`**：5 类规则——PR/Robot 生成内容过滤（`PR_PATTERNS`）、广告/newsletter 过滤（`AD_KEYWORDS`）、标题过短过滤（<15 字符）、描述过短过滤（<30 字符且无 gh_stars/image）、重复主题过滤（`titleSimilarity` 词重叠率 >0.6）
+- **技术价值评分函数 `scoreArticle(article)`**：6 维评分体系--新鲜度（指数衰减，7 天半衰期）、来源可信度（`SOURCE_QUALITY_WEIGHTS`）、GitHub stars（对数加成）、描述质量（有意义长度加成）、技术标签加成、有图加成
+- **质量过滤函数 `filterArticles(articles)`**：5 类规则--PR/Robot 生成内容过滤（`PR_PATTERNS`）、广告/newsletter 过滤（`AD_KEYWORDS`）、标题过短过滤（<15 字符）、描述过短过滤（<30 字符且无 gh_stars/image）、重复主题过滤（`titleSimilarity` 词重叠率 >0.6）
 - **按分区评分分配 `assignArticlesToSections(articles)`**：替换 naive sequential slicing，按 `sourceCategory` 建立分区池 → 每池内按 `scoreArticle` 排序 → 每区取 top quota，取代原有的全局排序后按位置切片
 - **卡片渲染增强**：技术标签（`.tech-tag` pill）和价值标签（`.value-tag` badge）渲染到 `generateArticleCard`，带颜色样式（`TECH_TAG_STYLES` / `VALUE_TAG_STYLES`）
 - **CSS 增强**：`.tech-tag`、`.value-tag`、`.card-tech-tags` 样式规则
