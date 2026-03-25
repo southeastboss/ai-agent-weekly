@@ -861,7 +861,7 @@ function generateArticleCard(article, isFeatured = false) {
   // 无图片时使用 AI 主题背景图（按分区选用不同的 neural-network / AI 视觉图）
   const sectionFallbacks = {
     'open-source': 'https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=800&h=400&fit=crop&q=80',
-    'vendor':      null, // vendor 分区 fallback 由下方逻辑处理：尝试用文章 URL 的 favicon
+    'vendor':      'https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=800&h=400&fit=crop&q=80',
     'frontier':    'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=800&h=400&fit=crop&q=80',
   };
 
@@ -872,7 +872,13 @@ function generateArticleCard(article, isFeatured = false) {
       // 尝试从文章 URL 提取域名，用 Google Favicon API 获取对应厂商的图标
       try {
         const urlObj = new URL(article.url);
-        imageUrl = `https://img.logo.dev/${urlObj.hostname}.png?size=512`;
+        // 已知厂商 Logo 直接映射（稳定高清 URL）
+        const KNOWN_LOGOS = {
+          'openai.com':    'https://openai.com/content/images/logos/openai-glyph-logo.svg',
+          'anthropic.com': 'https://www.anthropic.com/images/logo/anthropic-logo.svg',
+          'google.com':    'https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png',
+        };
+        imageUrl = KNOWN_LOGOS[urlObj.hostname] || `https://img.logo.dev/${urlObj.hostname}.png?size=512`;
       } catch (_) {
         // URL 解析失败，忽略
       }
@@ -948,7 +954,7 @@ function generateArticleCard(article, isFeatured = false) {
     return `
     <div class="featured-card" data-category="${article.sourceCategory}">
       <div class="card-thumb">
-        <img src="${imageUrl}" alt="${article.title}" loading="lazy" onerror="if(this.src!=='${sectionFallbacks[article.sourceCategory]}'){this.src='${sectionFallbacks[article.sourceCategory]}';this.onerror=null}">
+        <img src="${imageUrl}" alt="${article.title}" loading="lazy" onerror="this.src='${sectionFallbacks[article.sourceCategory]}';this.onerror=null">
         <div class="overlay" style="position:absolute;inset:0;background:linear-gradient(to right,rgba(0,0,0,0.3),transparent)"></div>
       </div>
       <div class="card-content">
@@ -968,7 +974,7 @@ function generateArticleCard(article, isFeatured = false) {
   return `
     <div class="article-card" data-category="${article.sourceCategory}">
       <div class="card-thumb">
-        <img src="${imageUrl}" alt="${article.title}" loading="lazy" onerror="if(this.src!=='${sectionFallbacks[article.sourceCategory]}'){this.src='${sectionFallbacks[article.sourceCategory]}';this.onerror=null}">
+        <img src="${imageUrl}" alt="${article.title}" loading="lazy" onerror="this.src='${sectionFallbacks[article.sourceCategory]}';this.onerror=null">
       </div>
       <div class="card-content">
         <span class="card-tag" style="background:${tagInfo.bg}">${tagInfo.label}</span>
