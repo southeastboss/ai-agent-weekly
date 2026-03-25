@@ -869,21 +869,18 @@ function generateArticleCard(article, isFeatured = false) {
 
   if (!imageUrl) {
     if (article.sourceCategory === 'vendor' && article.url) {
-      // 尝试从文章 URL 提取域名，用 Google Favicon API 获取对应厂商的图标
       try {
         const urlObj = new URL(article.url);
-        // 已知厂商 Logo 直接映射（稳定高清 URL）
-        const KNOWN_LOGOS = {
-          'openai.com':    'https://openai.com/content/images/logos/openai-glyph-logo.svg',
-          'anthropic.com': 'https://www.anthropic.com/images/logo/anthropic-logo.svg',
-          'google.com':    'https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png',
-        };
-        imageUrl = KNOWN_LOGOS[urlObj.hostname] || `https://img.logo.dev/${urlObj.hostname}.png?size=512`;
+        const localLogoPath = path.join(__dirname, '..', 'assets', 'vendor-logos', urlObj.hostname + '.png');
+        if (fs.existsSync(localLogoPath)) {
+          imageUrl = `assets/vendor-logos/${urlObj.hostname}.png`;
+        } else {
+          imageUrl = `https://img.logo.dev/${urlObj.hostname}.png?size=512`;
+        }
       } catch (_) {
         // URL 解析失败，忽略
       }
     }
-    // 如果 vendor 分区没有拿到 favicon，或者是非 vendor 分区，使用 section fallback
     if (!imageUrl) {
       imageUrl = sectionFallbacks[article.sourceCategory] || 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&h=400&fit=crop&q=80';
     }
