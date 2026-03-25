@@ -286,9 +286,53 @@
 ```
 
 ### 待完成（Chunk 2+）
-- 数据源重构：按分区分配不同来源（GitHub Trending → 开源项目，官方博客 → 厂商动态）
+- ~~数据源重构：按分区分配不同来源（GitHub Trending → 开源项目，官方博客 → 厂商动态）~~ ✅ Chunk 2 已完成
 - 技术价值评分函数
 - 质量过滤规则
+
+## 6.1 Chunk 2 已完成（2026-03-25）
+
+**数据源重构：按分区独立配置 + GitHub Trending + 厂商官方博客**
+
+### 实现内容
+- `scripts/scrape.js`：`CONFIG.sources` 从扁平数组重构为按分区（`open-source` / `vendor` / `frontier`）组织的对象
+- 新增 `extractGitHubTrendingArticles()` 函数：从 GitHub Trending 页面提取 AI/ML 项目，支持 `gh_stars`（今日 star 数）、`gh_lang`（编程语言）等字段
+- 新增 `getAllSources()` 辅助函数：将分区来源扁平化为统一数组
+- `enrichArticle()` 新增 GitHub 分支：GitHub 项目页面特殊处理（提取项目描述、避免标题被 GitHub 模板污染）
+- `generateArticleCard()` 新增 `tag-vendor` 和 `tag-opensource` 标签类型，以及 GitHub star 数和语言渲染
+- `scrapeAllSources()` 更新：按分区来源分别抓取，日志显示 `[sectionId]`，新增 `isGitHubTrending` 处理分支
+
+### 新增数据源
+- **开源项目分区**：`GitHub Trending Python` + `GitHub Trending JavaScript`（每日 AI/ML 热门项目）
+- **厂商动态分区**：`OpenAI Blog RSS` + `Anthropic Blog RSS` + `Google AI Blog RSS`（官方一手动态）
+- **前沿技术分区**：保留原有的 `artificialintelligence-news.com` 分类页 + TechCrunch/VentureBeat/HuggingFace RSS
+
+### 规范化文章结构
+所有抓取结果统一包含：
+```javascript
+{
+  title,           // 原标题
+  url,             // 文章/项目链接
+  date,            // 发布日期
+  description,     // 英文描述
+  sourceCategory,   // 归属分区（open-source / vendor / frontier）
+  tag,             // 标签文字
+  tagClass,        // 标签样式类
+  // GitHub 项目额外字段
+  gh_stars,        // 今日 star 数
+  gh_lang,         // 编程语言
+  gh_starsLink,    // star 趋势链接
+}
+```
+
+### 测试覆盖
+- 新增 `tests/chunk2-sources.test.js`（9 个测试用例，覆盖分区配置、GitHub 提取、厂商来源规范化、enrich 特殊处理）
+- 所有 21 个测试用例通过
+
+### 待完成（Chunk 3）
+- 技术价值评分函数（按分区权重分配配额）
+- 质量过滤规则
+- 来源可用性监控与回退机制
 
 ## 6. 后续改进计划
 
