@@ -645,13 +645,20 @@ function extractArticles($, source, rssText) {
 /**
  * 使用 MiniMax AI 生成文章摘要（中文，一句话概括）
  */
+function buildSummary(description) {
+  const cleaned = (description || '').replace(/\s+/g, ' ').trim();
+  if (!cleaned) return '';
+  if (cleaned.length <= 200) return cleaned;
+  return cleaned.substring(0, 200).trim();
+}
+
 async function generateSummary(article) {
   if (!article.title || !article.description) return article;
 
   const prompt = `一句话概括这段新闻（限50字内）：${article.title}。${article.description.substring(0, 200)}`;
 
-  // 直接使用原文描述作为摘要，跳过AI生成
-  const summary = article.description ? article.description.substring(0, 100).trim() : '';
+  // 直接使用原文描述作为摘要，优先保留 100~200 字的信息量；超过 200 字再截断
+  const summary = buildSummary(article.description);
   if (summary) {
     return { ...article, summary };
   }
@@ -1521,4 +1528,17 @@ if (!String.prototype.hashCode) {
   };
 }
 
-main().catch(console.error);
+if (require.main === module) {
+  main().catch(console.error);
+}
+
+module.exports = {
+  buildSummary,
+  generateSummary,
+  filterArticles,
+  scoreArticle,
+  inferTechTags,
+  inferValueTag,
+  assignArticlesToSections,
+  CONFIG,
+};
