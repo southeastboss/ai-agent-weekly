@@ -69,7 +69,13 @@ const CONFIG = {
     }
   ],
   // 每页最多文章数（从所有来源收集更多，确保 RSS 新文章能进入排序）
-  maxArticles: 10,
+  maxArticles: 15,
+  // 三分区内容配额
+  sections: [
+    { id: 'open-source', label: '开源项目', icon: '🛠️', quota: 5 },
+    { id: 'vendor', label: '厂商动态', icon: '🏢', quota: 5 },
+    { id: 'frontier', label: '前沿技术', icon: '🔬', quota: 5 },
+  ],
   // 输出路径
   outputFile: path.join(__dirname, '..', 'index.html'),
   templateFile: path.join(__dirname, '..', 'template.html')
@@ -528,11 +534,23 @@ function formatBeijingTimestamp(date = new Date()) {
 function generateHTML(articles) {
   const { updateDate, updateTime } = formatBeijingTimestamp();
 
-  const featured = articles[0];
-  const rest = articles.slice(1);
-  
-  const featuredHTML = generateArticleCard(featured, true);
-  const articlesHTML = rest.map(a => generateArticleCard(a)).join('\n');
+  // 将文章分配到三个分区（每区配额 5 条）
+  const sectionsHTML = CONFIG.sections.map((section, sIdx) => {
+    const start = sIdx * section.quota;
+    const slice = articles.slice(start, start + section.quota);
+    const cardsHTML = slice.map(a => generateArticleCard(a)).join('\n');
+    return `
+    <section class="section-block" data-section="${section.id}">
+      <h2 class="section-title">
+        <span class="section-icon">${section.icon}</span>
+        ${section.label}
+        <span class="section-count">${slice.length}</span>
+      </h2>
+      <div class="article-list">
+        ${cardsHTML}
+      </div>
+    </section>`;
+  }).join('\n');
 
   const html = `<!DOCTYPE html>
 <html lang="zh-CN">
@@ -815,6 +833,38 @@ function generateHTML(articles) {
         ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
         @keyframes fadeInRight { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: translateX(0); } }
         .article-card { animation: fadeInRight 0.4s ease forwards; }
+        /* ── 三分区结构 ─────────────────────────────────────── */
+        .section-block {
+            margin-bottom: 3rem;
+        }
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 1.2rem;
+            padding-bottom: 0.6rem;
+            border-bottom: 2px solid var(--border);
+            transition: color 0.4s ease, border-color 0.4s ease;
+        }
+        .section-title .section-icon {
+            font-size: 1.2rem;
+        }
+        .section-title .section-count {
+            margin-left: auto;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: var(--primary);
+            color: white;
+            padding: 0.15rem 0.55rem;
+            border-radius: 50px;
+        }
+        .section-block:nth-child(1) .section-title { border-bottom-color: #6366f1; }
+        .section-block:nth-child(2) .section-title { border-bottom-color: #f59e0b; }
+        .section-block:nth-child(3) .section-title { border-bottom-color: #10b981; }
+
         @media (max-width: 768px) {
             .featured-card { flex-direction: column; }
             .featured-card .card-thumb { width: 100%; min-height: 200px; }
@@ -823,6 +873,7 @@ function generateHTML(articles) {
             .hero h1 { font-size: 2rem; }
             .hero-stats { gap: 1.5rem; }
             .hero-stats .stat-num { font-size: 1.4rem; }
+            .section-title { font-size: 1rem; }
         }
     </style>
 </head>
@@ -846,11 +897,11 @@ function generateHTML(articles) {
     <section class="hero">
         <div class="hero-inner">
             <div class="pill">🧠 专注 · AI Agent 前沿</div>
-            <h1>AI Agent 本周动态</h1>
+            <h1>AI 技术情报站</h1>
             <p>追踪 AI Agent、具身智能、多智能体系统的最新进展与行业应用</p>
             <div class="hero-stats">
                 <div class="stat-item">
-                    <div class="stat-num">${articles.length}</div>
+                    <div class="stat-num">15</div>
                     <div class="stat-label">篇精选文章</div>
                 </div>
                 <div class="stat-item">
@@ -866,11 +917,7 @@ function generateHTML(articles) {
     </section>
 
     <main>
-        ${featuredHTML}
-
-        <div class="article-list" id="articleList">
-            ${articlesHTML}
-        </div>
+        ${sectionsHTML}
 
         <div class="source-note">
             📡 数据来源：<a href="https://www.artificialintelligence-news.com/" target="_blank">artificialintelligence-news.com</a> · 
@@ -906,28 +953,36 @@ function generateHTML(articles) {
         function filterNews(category) {
             document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
             event.target.closest('.category-btn').classList.add('active');
-            const featured = document.getElementById('featured');
-            const list = document.getElementById('articleList');
+            const sections = document.querySelectorAll('.section-block');
             const emptyState = document.getElementById('emptyState');
-            if (featured) featured.style.display = (category === 'all') ? 'flex' : 'none';
-            const cards = list.querySelectorAll('.article-card');
             let visibleCount = 0;
-            cards.forEach((card, index) => {
-                const show = category === 'all' || card.dataset.category === category;
-                if (show) {
-                    visibleCount++;
-                    if (card.style.display === 'none') {
-                        card.style.display = 'flex';
-                        card.style.animation = 'none';
-                        card.offsetHeight;
-                        card.style.opacity = '0';
-                        card.style.transform = 'translateX(-12px)';
-                        requestAnimationFrame(() => {
-                            card.style.animation = 'fadeInRight 0.4s ease ' + (index * 0.05) + 's forwards';
-                        });
+            sections.forEach(section => {
+                const cards = section.querySelectorAll('.article-card');
+                const sectionTitle = section.querySelector('.section-title');
+                let sectionVisible = 0;
+                cards.forEach((card, index) => {
+                    const show = category === 'all' || card.dataset.category === category;
+                    if (show) {
+                        sectionVisible++;
+                        visibleCount++;
+                        if (card.style.display === 'none') {
+                            card.style.display = 'flex';
+                            card.style.animation = 'none';
+                            card.offsetHeight;
+                            card.style.opacity = '0';
+                            card.style.transform = 'translateX(-12px)';
+                            requestAnimationFrame(() => {
+                                card.style.animation = 'fadeInRight 0.4s ease ' + (index * 0.05) + 's forwards';
+                            });
+                        }
+                    } else {
+                        card.style.display = 'none';
                     }
-                } else {
-                    card.style.display = 'none';
+                });
+                section.style.display = sectionVisible > 0 ? 'block' : 'none';
+                if (sectionTitle) {
+                    const countEl = sectionTitle.querySelector('.section-count');
+                    if (countEl) countEl.textContent = sectionVisible;
                 }
             });
             emptyState.style.display = visibleCount === 0 ? 'block' : 'none';
