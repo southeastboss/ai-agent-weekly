@@ -859,13 +859,18 @@ async function scrapeAllSources() {
  */
 function generateArticleCard(article, isFeatured = false) {
   // 无图片时使用 AI 主题背景图（按分区选用不同的 neural-network / AI 视觉图）
+  // 开源项目默认图：GitHub 图标
+  // 厂商动态默认图：各厂商自己的 Logo（由下面 imageUrl 逻辑决定）
   const sectionFallbacks = {
-    'open-source': 'https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=800&h=400&fit=crop&q=80',
-    'vendor':      'https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=800&h=400&fit=crop&q=80',
+    'open-source': 'https://github.githubassets.com/images/modules/logos_page/GitHub-Logo.png',
+    'vendor':      null, // 由 imageUrl 逻辑决定（见下）
     'frontier':    'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=800&h=400&fit=crop&q=80',
   };
 
   let imageUrl = article.image;
+
+  // 厂商 Logo 的最终兜底 URL（用于 onerror）
+  let vendorLogoFallback = sectionFallbacks['vendor'];
 
   if (!imageUrl) {
     if (article.sourceCategory === 'vendor' && article.url) {
@@ -874,6 +879,13 @@ function generateArticleCard(article, isFeatured = false) {
         const logoName = urlObj.hostname.replace('www.', '').replace('.com', '');
         const pngPath = path.join(__dirname, '..', 'assets', 'vendor-logos', logoName + '.png');
         const svgPath = path.join(__dirname, '..', 'assets', 'vendor-logos', logoName + '.svg');
+        // 已知厂商 Logo 直接映射（作为兜底图）
+        const KNOWN_LOGOS = {
+          'openai.com':    'https://openai.com/content/images/logos/openai-glyph-logo.svg',
+          'anthropic.com': 'https://www.anthropic.com/images/logo/anthropic-logo.svg',
+          'google.com':    'https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png',
+        };
+        vendorLogoFallback = KNOWN_LOGOS[urlObj.hostname] || null;
         if (fs.existsSync(pngPath)) {
           imageUrl = `assets/vendor-logos/${logoName}.png`;
         } else if (fs.existsSync(svgPath)) {
@@ -889,6 +901,12 @@ function generateArticleCard(article, isFeatured = false) {
       imageUrl = sectionFallbacks[article.sourceCategory] || 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&h=400&fit=crop&q=80';
     }
   }
+
+  // 确定最终的 onerror 兜底图
+  const fallbackUrl = article.sourceCategory === 'vendor' && vendorLogoFallback
+    ? vendorLogoFallback
+    : (sectionFallbacks[article.sourceCategory] || 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&h=400&fit=crop&q=80');
+
 
   const tagMap = {
     'tag-agent': { bg: 'linear-gradient(135deg, #6366f1, #8b5cf6)', label: article.tag || 'Agent' },
@@ -955,7 +973,7 @@ function generateArticleCard(article, isFeatured = false) {
     return `
     <div class="featured-card" data-category="${article.sourceCategory}">
       <div class="card-thumb">
-        <img src="${imageUrl}" alt="${article.title}" loading="lazy" onerror="this.src='${sectionFallbacks[article.sourceCategory]}';this.onerror=null">
+        <img src="${imageUrl}" alt="${article.title}" loading="lazy" onerror="this.src='${fallbackUrl}';this.onerror=null">
         <div class="overlay" style="position:absolute;inset:0;background:linear-gradient(to right,rgba(0,0,0,0.3),transparent)"></div>
       </div>
       <div class="card-content">
@@ -975,7 +993,7 @@ function generateArticleCard(article, isFeatured = false) {
   return `
     <div class="article-card" data-category="${article.sourceCategory}">
       <div class="card-thumb">
-        <img src="${imageUrl}" alt="${article.title}" loading="lazy" onerror="this.src='${sectionFallbacks[article.sourceCategory]}';this.onerror=null">
+        <img src="${imageUrl}" alt="${article.title}" loading="lazy" onerror="this.src='${fallbackUrl}';this.onerror=null">
       </div>
       <div class="card-content">
         <span class="card-tag" style="background:${tagInfo.bg}">${tagInfo.label}</span>
