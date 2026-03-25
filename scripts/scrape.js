@@ -146,6 +146,236 @@ const CONFIG = {
   templateFile: path.join(__dirname, '..', 'template.html')
 };
 
+// ─── Chunk 3: 技术标签词汇表 ─────────────────────────────────────────────
+const TECH_TAG_VOCABULARY = {
+  LLM: ['llm', 'language model', 'gpt', 'claude', 'gemini', 'chatgpt', 'gpt-4', 'gpt-5', 'openai', 'anthropic', 'large language model'],
+  Agent: ['agent', 'multi-agent', 'multiagent', 'agentic', '代理', '智能体', 'multi-agent', 'agentic workflow'],
+  RAG: ['rag', 'retrieval', 'retrieval-augmented', 'vector search', 'embedding'],
+  CodeGen: ['code generation', 'coding', 'code assistant', 'copilot', 'codex', 'code gen', 'programming'],
+  Multimodal: ['multimodal', 'vision', 'image generation', 'text-to-image', 'stable diffusion', 'video generation', 'audio'],
+  Embedding: ['embedding', 'embeddings', 'vector database', 'pinecone', 'chroma', 'qdrant'],
+  Finetuning: ['finetune', 'fine-tune', 'lora', 'rlhf', 'training', 'pre-training', 'domain adaptation'],
+  Inference: ['inference', 'inference engine', 'ollama', 'llama.cpp', '量化', 'quantization', 'vllm', 'tensorrt'],
+  Safety: ['safety', 'alignment', 'rlhf', 'constitutional ai', 'red teaming', 'jailbreak', 'safety evaluation'],
+  OpenSource: ['open source', 'open-source', 'github', 'apache', 'mit license', 'public release', 'open weights'],
+  Robotics: ['robot', 'robotics', '具身智能', 'embodied ai', 'autonomous', 'drone'],
+  Research: ['paper', 'arxiv', 'research', 'study', 'benchmark', 'evaluation', '学术', '研究'],
+};
+
+// ─── Chunk 3: 价值标签配置 ──────────────────────────────────────────────
+const VALUE_TAG_CONFIG = {
+  'open-source': '开源项目',
+  'vendor': '商业动态',
+  'frontier': '前沿探索',
+};
+
+// ─── Chunk 3: 来源可信度权重 ─────────────────────────────────────────────
+const SOURCE_QUALITY_WEIGHTS = {
+  // 开源分区
+  'GitHub Trending AI': 1.2,
+  'GitHub Trending AI (JS)': 1.1,
+  // 厂商分区（官方来源权重更高）
+  'Anthropic Blog': 1.5,
+  'OpenAI Blog': 1.5,
+  'Google AI Blog': 1.3,
+  // 前沿技术分区
+  'Hugging Face Blog': 1.4,
+  'VentureBeat AI': 1.1,
+  'TechCrunch AI': 1.0,
+  'AI and Us': 1.0,
+  'AI in Action': 1.0,
+  'Inside AI': 1.0,
+};
+
+// ─── Chunk 3: 根据内容关键词推断技术标签 ──────────────────────────────────
+function inferTechTags(article) {
+  const text = `${article.title} ${article.description}`.toLowerCase();
+  const tags = [];
+  for (const [tag, keywords] of Object.entries(TECH_TAG_VOCABULARY)) {
+    for (const kw of keywords) {
+      if (text.includes(kw.toLowerCase())) {
+        tags.push(tag);
+        break;
+      }
+    }
+  }
+  return tags.slice(0, 3); // 最多3个技术标签
+}
+
+// ─── Chunk 3: 推断价值标签 ────────────────────────────────────────────────
+function inferValueTag(article, sectionId) {
+  // 根据分区和内容综合判断价值标签
+  const text = `${article.title} ${article.description}`.toLowerCase();
+
+  if (sectionId === 'open-source') {
+    if (text.includes('github') && article.gh_stars && parseInt(article.gh_stars.replace(/[,+]/g, '')) > 100) return '热门项目';
+    if (text.includes('framework') || text.includes('library') || text.includes('tool')) return '实用工具';
+    return '开源项目';
+  }
+  if (sectionId === 'vendor') {
+    if (text.includes('model') || text.includes('gpt') || text.includes('claude') || text.includes('gemini')) return '模型发布';
+    if (text.includes('api') || text.includes('sdk') || text.includes('platform')) return '平台更新';
+    return '商业动态';
+  }
+  if (sectionId === 'frontier') {
+    if (text.includes('paper') || text.includes('arxiv') || text.includes('research')) return '学术成果';
+    if (text.includes('agent') || text.includes('multi')) return 'Agent 突破';
+    if (text.includes('robot') || text.includes('embodied')) return '具身智能';
+    return '前沿探索';
+  }
+  return VALUE_TAG_CONFIG[sectionId] || '技术动态';
+}
+
+// ─── Chunk 3: 技术价值评分函数 ───────────────────────────────────────────
+function scoreArticle(article) {
+  let score = 0;
+
+  // 1. 新鲜度评分（指数衰减，7天半衰期）
+  if (article.date) {
+    const daysAgo = (Date.now() - new Date(article.date).getTime()) / (1000 * 60 * 60 * 24);
+    const recencyScore = Math.pow(0.9, daysAgo / 7);
+    score += recencyScore * 30;
+  } else {
+    score -= 10; // 没有日期的文章扣分
+  }
+
+  // 2. 来源可信度评分
+  const sourceWeight = SOURCE_QUALITY_WEIGHTS[article._sourceName] || 1.0;
+  score += sourceWeight * 20;
+
+  // 3. GitHub stars 评分（仅开源分区）
+  if (article.gh_stars) {
+    const stars = parseInt(article.gh_stars.replace(/[,+]/g, '')) || 0;
+    const starScore = Math.log10(stars + 1) * 10;
+    score += starScore;
+  }
+
+  // 4. 描述质量评分（有意义的长度）
+  const descLen = (article.description || '').length;
+  if (descLen >= 50) {
+    score += Math.min(descLen / 10, 15);
+  } else if (descLen < 20) {
+    score -= 10;
+  }
+
+  // 5. 技术标签评分（有技术标签的文章更有价值）
+  if (article.techTags && article.techTags.length > 0) {
+    score += article.techTags.length * 3;
+  }
+
+  // 6. 有图片加一点分
+  if (article.image) {
+    score += 2;
+  }
+
+  return score;
+}
+
+// ─── Chunk 3: 质量过滤函数 ───────────────────────────────────────────────
+const AD_KEYWORDS = ['newsletter', 'sponsored', 'advertisement', 'advert', 'newsletter', 'subscribe to', 'email course'];
+const PR_PATTERNS = [/^pr[:\s]/i, /^\[pr\]/i, /robot[\s-]?generated/i, /automated[\s-]?post/i, /爬虫/i, /^auto[\s-]?post/i];
+const LOW_QUALITY_PATTERNS = [/^click here/i, /^read more/i, /^learn more/i, /^\s*$/];
+
+function isLowQuality(article) {
+  const title = article.title || '';
+  const desc = article.description || '';
+
+  // 1. PR / Robot 生成内容
+  for (const pattern of PR_PATTERNS) {
+    if (pattern.test(title)) return true;
+  }
+
+  // 2. 广告 / newsletter
+  for (const kw of AD_KEYWORDS) {
+    if (title.toLowerCase().includes(kw) || desc.toLowerCase().includes(kw)) return true;
+  }
+
+  // 3. 标题过短
+  if (title.trim().length < 15) return true;
+
+  // 4. 描述过短（低于30字符且无有效信息）
+  if (desc.trim().length < 30 && !article.gh_stars && !article.image) return true;
+
+  // 5. 纯 placeholder 内容
+  for (const pattern of LOW_QUALITY_PATTERNS) {
+    if (pattern.test(title.trim())) return true;
+  }
+
+  return false;
+}
+
+// 计算两个标题的相似度（简单词重叠）
+function titleSimilarity(a, b) {
+  const wordsA = new Set((a || '').toLowerCase().split(/\s+/).filter(w => w.length > 3));
+  const wordsB = new Set((b || '').toLowerCase().split(/\s+/).filter(w => w.length > 3));
+  if (wordsA.size === 0 || wordsB.size === 0) return 0;
+  let overlap = 0;
+  for (const word of wordsA) {
+    if (wordsB.has(word)) overlap++;
+  }
+  return overlap / Math.max(wordsA.size, wordsB.size);
+}
+
+/**
+ * 过滤低质量/重复主题内容
+ */
+function filterArticles(articles) {
+  const seen = [];
+  return articles.filter(article => {
+    // 1. 低质量过滤
+    if (isLowQuality(article)) {
+      console.log(`   🚫 过滤低质量: ${article.title.substring(0, 50)}`);
+      return false;
+    }
+
+    // 2. 重复主题过滤（标题相似度 > 0.6 视为重复）
+    for (const existing of seen) {
+      if (titleSimilarity(existing.title, article.title) > 0.6) {
+        console.log(`   🔁 过滤重复: "${article.title.substring(0, 40)}" ~ "${existing.title.substring(0, 40)}"`);
+        return false;
+      }
+    }
+
+    seen.push(article);
+    return true;
+  });
+}
+
+// ─── Chunk 3: 按分区分配文章（替换 naive sequential slicing）───────────────
+function assignArticlesToSections(articles) {
+  // 按 sourceCategory 建立分区池
+  const sectionPools = {};
+  for (const section of CONFIG.sections) {
+    sectionPools[section.id] = [];
+  }
+
+  // 分配文章到对应分区池
+  for (const article of articles) {
+    const sectionId = article.sourceCategory || 'frontier';
+    if (sectionPools[sectionId]) {
+      sectionPools[sectionId].push(article);
+    } else {
+      sectionPools['frontier'].push(article);
+    }
+  }
+
+  // 每个分区内部按评分排序
+  for (const sectionId of Object.keys(sectionPools)) {
+    sectionPools[sectionId].sort((a, b) => scoreArticle(b) - scoreArticle(a));
+  }
+
+  // 从每个分区取 top quota 条
+  const result = [];
+  for (const section of CONFIG.sections) {
+    const pool = sectionPools[section.id] || [];
+    const selected = pool.slice(0, section.quota);
+    console.log(`   📊 分区 "${section.id}" 得分前${selected.length}条（共${pool.length}条候选）`);
+    result.push(...selected);
+  }
+
+  return result;
+}
+
 const turndown = new Turndown({
   headingStyle: 'atx',
   bulletListMarker: '-'
@@ -261,7 +491,7 @@ function extractRssArticles(rssText, source) {
       : '';
 
     if (title && link) {
-      articles.push({ title, url: link, date, description, sourceCategory: source.sectionId, tag: source.tag, tagClass: source.tagClass });
+      articles.push({ title, url: link, date, description, sourceCategory: source.sectionId, tag: source.tag, tagClass: source.tagClass, _sourceName: source.name });
     }
   }
 
@@ -311,6 +541,7 @@ function extractGitHubTrendingArticles($, source) {
         sourceCategory: source.sectionId,
         tag: source.tag,
         tagClass: source.tagClass,
+        _sourceName: source.name,
         // GitHub 特有字段
         gh_stars: stars,
         gh_lang: lang,
@@ -400,6 +631,7 @@ function extractArticles($, source, rssText) {
         sourceCategory: source.sectionId,
         tag: source.tag,
         tagClass: source.tagClass,
+        _sourceName: source.name,
       });
     });
   }
@@ -623,7 +855,20 @@ async function scrapeAllSources() {
     return dateB - dateA;
   });
 
-  return allArticles.slice(0, CONFIG.maxArticles);
+  // ── Chunk 3: 质量过滤 ────────────────────────────────────────────
+  const filtered = filterArticles(allArticles);
+  console.log(`\n🧹 质量过滤后剩余 ${filtered.length} 篇`);
+
+  // ── Chunk 3: 填充 techTags 和 valueTag ───────────────────────────
+  for (const article of filtered) {
+    article.techTags = inferTechTags(article);
+    article.valueTag = inferValueTag(article, article.sourceCategory);
+  }
+
+  // ── Chunk 3: 按分区评分分配（替换 naive sequential slicing）───────
+  const sectionedArticles = assignArticlesToSections(filtered);
+
+  return sectionedArticles.slice(0, CONFIG.maxArticles);
 }
 
 /**
@@ -643,6 +888,47 @@ function generateArticleCard(article, isFeatured = false) {
     'tag-opensource': { bg: 'linear-gradient(135deg, #10b981, #059669)', label: '开源' },
   };
   const tagInfo = tagMap[article.tagClass] || { bg: 'linear-gradient(135deg, #6366f1, #764ba2)', label: article.tag || 'AI' };
+
+  // ── Chunk 3: 技术标签渲染 ────────────────────────────────────────
+  const TECH_TAG_STYLES = {
+    LLM: { bg: '#e0e7ff', color: '#4338ca' },
+    Agent: { bg: '#ede9fe', color: '#7c3aed' },
+    RAG: { bg: '#dcfce7', color: '#15803d' },
+    CodeGen: { bg: '#fef3c7', color: '#b45309' },
+    Multimodal: { bg: '#fce7f3', color: '#be185d' },
+    Embedding: { bg: '#e0f2fe', color: '#0369a1' },
+    Finetuning: { bg: '#fee2e2', color: '#b91c1c' },
+    Inference: { bg: '#f1f5f9', color: '#475569' },
+    Safety: { bg: '#fef9c3', color: '#854d0e' },
+    OpenSource: { bg: '#d1fae5', color: '#065f46' },
+    Robotics: { bg: '#ccfbf1', color: '#0f766e' },
+    Research: { bg: '#dbEafe', color: '#1d4ed8' },
+  };
+  const techTagsHTML = (article.techTags && article.techTags.length > 0)
+    ? article.techTags.map(tag => {
+        const style = TECH_TAG_STYLES[tag] || { bg: '#f3f4f6', color: '#374151' };
+        return `<span class="tech-tag" style="background:${style.bg};color:${style.color}">${tag}</span>`;
+      }).join('')
+    : '';
+
+  // ── Chunk 3: 价值标签渲染 ────────────────────────────────────────
+  const VALUE_TAG_STYLES = {
+    '热门项目': { bg: '#fef3c7', color: '#92400e' },
+    '实用工具': { bg: '#d1fae5', color: '#065f46' },
+    '商业动态': { bg: '#ede9fe', color: '#6d28d9' },
+    '模型发布': { bg: '#dbeafe', color: '#1e40af' },
+    '平台更新': { bg: '#fce7f3', color: '#9d174d' },
+    '学术成果': { bg: '#e0e7ff', color: '#3730a3' },
+    'Agent 突破': { bg: '#fef9c3', color: '#78350f' },
+    '具身智能': { bg: '#ccfbf1', color: '#115e59' },
+    '前沿探索': { bg: '#f1f5f9', color: '#334155' },
+    '开源项目': { bg: '#d1fae5', color: '#064e3b' },
+    '技术动态': { bg: '#f3f4f6', color: '#374151' },
+  };
+  const valueStyle = VALUE_TAG_STYLES[article.valueTag] || { bg: '#f3f4f6', color: '#374151' };
+  const valueTagHTML = article.valueTag
+    ? `<span class="value-tag" style="background:${valueStyle.bg};color:${valueStyle.color}">${article.valueTag}</span>`
+    : '';
 
   // GitHub 项目特殊描述增强
   let extraMeta = '';
@@ -684,10 +970,12 @@ function generateArticleCard(article, isFeatured = false) {
       </div>
       <div class="card-content">
         <span class="card-tag" style="background:${tagInfo.bg}">${tagInfo.label}</span>
+        ${valueTagHTML ? `<span class="value-tag" style="background:${valueStyle.bg};color:${valueStyle.color};margin-left:0.3rem">${article.valueTag}</span>` : ''}
         <h3 class="card-title">
           <a href="${article.url}" target="_blank">${article.title}</a>
         </h3>
         ${article.summary ? `<p class="card-summary">${article.summary}</p>` : `<p class="card-desc">${article.description}</p>`}
+        ${techTagsHTML ? `<div class="card-tech-tags">${techTagsHTML}</div>` : ''}
         <div class="card-meta">
           <div class="card-source">
             <span class="icon" style="background:${tagInfo.bg.split(',')[0].replace('linear-gradient(135deg, ', '')}">${article.title.charAt(0)}</span>
@@ -922,6 +1210,20 @@ function generateHTML(articles) {
             font-size: 0.7rem; font-weight: 600;
             letter-spacing: 0.3px; color: white;
             margin-bottom: 0.75rem; width: fit-content;
+        }
+        .article-card .tech-tag {
+            display: inline-block; padding: 0.15rem 0.5rem; border-radius: 50px;
+            font-size: 0.65rem; font-weight: 600;
+            letter-spacing: 0.2px; margin-right: 0.25rem;
+        }
+        .article-card .value-tag {
+            display: inline-block; padding: 0.15rem 0.5rem; border-radius: 50px;
+            font-size: 0.65rem; font-weight: 600;
+            letter-spacing: 0.2px;
+        }
+        .article-card .card-tech-tags {
+            display: flex; flex-wrap: wrap; gap: 0.25rem;
+            margin-top: 0.4rem; margin-bottom: 0.2rem;
         }
         .article-card .card-title {
             font-size: 1.1rem; font-weight: 600;

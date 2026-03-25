@@ -318,6 +318,9 @@
   sourceCategory,   // 归属分区（open-source / vendor / frontier）
   tag,             // 标签文字
   tagClass,        // 标签样式类
+  _sourceName,     // 来源名称（用于评分权重）
+  techTags,        // 技术标签数组（最多3个：LLM、Agent、RAG、CodeGen、Multimodal 等）
+  valueTag,        // 价值标签字符串（如「热门项目」「模型发布」「学术成果」）
   // GitHub 项目额外字段
   gh_stars,        // 今日 star 数
   gh_lang,         // 编程语言
@@ -326,13 +329,23 @@
 ```
 
 ### 测试覆盖
-- 新增 `tests/chunk2-sources.test.js`（9 个测试用例，覆盖分区配置、GitHub 提取、厂商来源规范化、enrich 特殊处理）
-- 所有 21 个测试用例通过
+- `tests/chunk2-sources.test.js`（9 个测试用例，覆盖分区配置、GitHub 提取、厂商来源规范化、enrich 特殊处理）
+- `tests/tags.test.js`（8 个测试用例，覆盖 techTags/valueTag 字段、标签词汇表、渲染逻辑）
+- `tests/scoring.test.js`（8 个测试用例，覆盖评分函数各维度、per-section bucketing）
+- `tests/filtering.test.js`（8 个测试用例，覆盖各类过滤规则、pipeline 顺序）
+- 所有 45 个测试用例通过
+
+### 已完成（Chunk 3）
+- **技术标签（techTags）**：12 类技术标签（LLM、Agent、RAG、CodeGen、Multimodal、Embedding、Finetuning、Inference、Safety、OpenSource、Robotics、Research），基于 `TECH_TAG_VOCABULARY` 关键词匹配推断，每篇文章最多显示 3 个标签
+- **价值标签（valueTag）**：根据分区（开源/厂商/前沿）和内容关键词推断，包括「热门项目」「实用工具」「模型发布」「平台更新」「学术成果」「Agent 突破」「具身智能」等标签，带颜色样式渲染到卡片中
+- **技术价值评分函数 `scoreArticle(article)`**：6 维评分体系——新鲜度（指数衰减，7 天半衰期）、来源可信度（`SOURCE_QUALITY_WEIGHTS`）、GitHub stars（对数加成）、描述质量（有意义长度加成）、技术标签加成、有图加成
+- **质量过滤函数 `filterArticles(articles)`**：5 类规则——PR/Robot 生成内容过滤（`PR_PATTERNS`）、广告/newsletter 过滤（`AD_KEYWORDS`）、标题过短过滤（<15 字符）、描述过短过滤（<30 字符且无 gh_stars/image）、重复主题过滤（`titleSimilarity` 词重叠率 >0.6）
+- **按分区评分分配 `assignArticlesToSections(articles)`**：替换 naive sequential slicing，按 `sourceCategory` 建立分区池 → 每池内按 `scoreArticle` 排序 → 每区取 top quota，取代原有的全局排序后按位置切片
+- **卡片渲染增强**：技术标签（`.tech-tag` pill）和价值标签（`.value-tag` badge）渲染到 `generateArticleCard`，带颜色样式（`TECH_TAG_STYLES` / `VALUE_TAG_STYLES`）
+- **CSS 增强**：`.tech-tag`、`.value-tag`、`.card-tech-tags` 样式规则
 
 ### 待完成（Chunk 3）
-- 技术价值评分函数（按分区权重分配配额）
-- 质量过滤规则
-- 来源可用性监控与回退机制
+- 来源可用性监控与回退机制（更完善的来源失败处理）
 
 ## 6. 后续改进计划
 
