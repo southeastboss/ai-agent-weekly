@@ -861,10 +861,27 @@ function generateArticleCard(article, isFeatured = false) {
   // 无图片时使用 AI 主题背景图（按分区选用不同的 neural-network / AI 视觉图）
   const sectionFallbacks = {
     'open-source': 'https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=800&h=400&fit=crop&q=80',
-    'vendor':      'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&h=400&fit=crop&q=80',
+    'vendor':      null, // vendor 分区 fallback 由下方逻辑处理：尝试用文章 URL 的 favicon
     'frontier':    'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=800&h=400&fit=crop&q=80',
   };
-  const imageUrl = article.image || sectionFallbacks[article.sourceCategory] || 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&h=400&fit=crop&q=80';
+
+  let imageUrl = article.image;
+
+  if (!imageUrl) {
+    if (article.sourceCategory === 'vendor' && article.url) {
+      // 尝试从文章 URL 提取域名，用 Google Favicon API 获取对应厂商的图标
+      try {
+        const urlObj = new URL(article.url);
+        imageUrl = `https://www.google.com/s2/favicons?domain=${urlObj.hostname}&sz=128&dpi=2`;
+      } catch (_) {
+        // URL 解析失败，忽略
+      }
+    }
+    // 如果 vendor 分区没有拿到 favicon，或者是非 vendor 分区，使用 section fallback
+    if (!imageUrl) {
+      imageUrl = sectionFallbacks[article.sourceCategory] || 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&h=400&fit=crop&q=80';
+    }
+  }
 
   const tagMap = {
     'tag-agent': { bg: 'linear-gradient(135deg, #6366f1, #8b5cf6)', label: article.tag || 'Agent' },
@@ -1181,6 +1198,11 @@ function generateHTML(articles) {
             width: 100%; height: 100%; object-fit: cover;
             transition: transform 0.5s ease;
         }
+        /* vendor 分区使用 Google Favicon 图标作为 fallback 时，保持原始尺寸居中显示 */
+        .article-card[data-category="vendor"] .card-thumb img {
+            object-fit: contain;
+            background: #f8fafc;
+        }
         .article-card:hover .card-thumb img { transform: scale(1.06); }
         .article-card .card-content {
             padding: 1.4rem 1.6rem;
@@ -1249,6 +1271,10 @@ function generateHTML(articles) {
         .featured-card .card-thumb img {
             width: 100%; height: 100%; object-fit: cover;
             transition: transform 0.5s ease;
+        }
+        .featured-card[data-category="vendor"] .card-thumb img {
+            object-fit: contain;
+            background: #f8fafc;
         }
         .featured-card:hover .card-thumb img { transform: scale(1.05); }
         .featured-card .card-content {
