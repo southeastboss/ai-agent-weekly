@@ -1,11 +1,11 @@
 /**
  * AI Agent 前沿动态 — 新闻抓取脚本
- * 
+ *
  * 功能：
- * 1. 从 artificialintelligence-news.com 抓取 AI Agent 相关文章
+ * 1. 从多个来源抓取 AI Agent 相关文章，按分区（开源项目 / 厂商动态 / 前沿技术）分别收集
  * 2. 渲染到 HTML 模板
  * 3. 输出到 index.html
- * 
+ *
  * 使用：node scripts/scrape.js
  */
 
@@ -17,63 +17,364 @@ const path = require('path');
 const { execFileSync } = require('child_process');
 
 // ─── 配置 ───────────────────────────────────────────────────────────────
+
+/**
+ * 数据源按分区组织
+ * 每个分区有独立配额和来源列表
+ * 分区来源抓取的 article 会自动带上 sectionId，便于后续按区分配
+ */
 const CONFIG = {
-  // 目标新闻来源（分类页 或 RSS Feed）
-  sources: [
-    // 分类页来源
-    {
-      name: 'AI and Us',
-      url: 'https://www.artificialintelligence-news.com/categories/ai-and-us/',
-      category: 'agent',
-      tag: '多智能体',
-      tagClass: 'tag-agent'
-    },
-    {
-      name: 'AI in Action',
-      url: 'https://www.artificialintelligence-news.com/categories/ai-in-action/',
-      category: 'agent',
-      tag: '自动化',
-      tagClass: 'tag-automation'
-    },
-    {
-      name: 'Inside AI',
-      url: 'https://www.artificialintelligence-news.com/categories/inside-ai/',
-      category: 'agent',
-      tag: 'Agent',
-      tagClass: 'tag-agent'
-    },
-    // RSS Feed 来源
-    {
-      name: 'TechCrunch AI',
-      url: 'https://techcrunch.com/category/artificial-intelligence/feed/',
-      category: 'agent',
-      tag: 'AI',
-      tagClass: 'tag-agent',
-      isRss: true
-    },
-    {
-      name: 'VentureBeat AI',
-      url: 'https://venturebeat.com/category/ai/feed/',
-      category: 'agent',
-      tag: 'AI',
-      tagClass: 'tag-agent',
-      isRss: true
-    },
-    {
-      name: 'Hugging Face Blog',
-      url: 'https://huggingface.co/blog/feed.xml',
-      category: 'agent',
-      tag: 'AI',
-      tagClass: 'tag-agent',
-      isRss: true
-    }
+  // 三分区内容配额
+  sections: [
+    { id: 'open-source', label: '开源项目', icon: '🛠️', quota: 5 },
+    { id: 'vendor', label: '厂商动态', icon: '🏢', quota: 5 },
+    { id: 'frontier', label: '前沿技术', icon: '🔬', quota: 5 },
   ],
+
+  // ── 分区来源配置 ──────────────────────────────────────────────────
+  // 每个来源声明 sectionId，表示该来源文章默认归属哪个分区
+  // 注意：抓取时按来源分区收集，enrich 后再统一填入各区配额
+  sources: {
+    'open-source': [
+      // GitHub Trending — AI/ML 相关项目
+      {
+        name: 'GitHub Trending AI',
+        url: 'https://github.com/trending?since=daily&l=python',
+        sectionId: 'open-source',
+        tag: '开源项目',
+        tagClass: 'tag-opensource',
+        isGitHubTrending: true,
+        trendingLang: 'python',
+      },
+      {
+        name: 'GitHub Trending AI (JS)',
+        url: 'https://github.com/trending?since=daily&l=javascript',
+        sectionId: 'open-source',
+        tag: '开源项目',
+        tagClass: 'tag-opensource',
+        isGitHubTrending: true,
+        trendingLang: 'javascript',
+      },
+    ],
+
+    'vendor': [
+      // OpenAI 官方博客
+      {
+        name: 'OpenAI Blog',
+        url: 'https://openai.com/blog/rss.xml',
+        sectionId: 'vendor',
+        tag: 'OpenAI',
+        tagClass: 'tag-vendor',
+        isRss: true,
+      },
+      // Anthropic 官方博客
+      {
+        name: 'Anthropic Blog',
+        url: 'https://www.anthropic.com/blog/rss.xml',
+        sectionId: 'vendor',
+        tag: 'Anthropic',
+        tagClass: 'tag-vendor',
+        isRss: true,
+      },
+      // Google AI Blog
+      {
+        name: 'Google AI Blog',
+        url: 'https://blog.google/technology/ai/rss/',
+        sectionId: 'vendor',
+        tag: 'Google',
+        tagClass: 'tag-vendor',
+        isRss: true,
+      },
+    ],
+
+    'frontier': [
+      // 分类页来源
+      {
+        name: 'AI and Us',
+        url: 'https://www.artificialintelligence-news.com/categories/ai-and-us/',
+        sectionId: 'frontier',
+        tag: '多智能体',
+        tagClass: 'tag-agent',
+      },
+      {
+        name: 'AI in Action',
+        url: 'https://www.artificialintelligence-news.com/categories/ai-in-action/',
+        sectionId: 'frontier',
+        tag: '自动化',
+        tagClass: 'tag-automation',
+      },
+      {
+        name: 'Inside AI',
+        url: 'https://www.artificialintelligence-news.com/categories/inside-ai/',
+        sectionId: 'frontier',
+        tag: 'Agent',
+        tagClass: 'tag-agent',
+      },
+      // RSS Feed 来源
+      {
+        name: 'TechCrunch AI',
+        url: 'https://techcrunch.com/category/artificial-intelligence/feed/',
+        sectionId: 'frontier',
+        tag: 'AI',
+        tagClass: 'tag-agent',
+        isRss: true,
+      },
+      {
+        name: 'VentureBeat AI',
+        url: 'https://venturebeat.com/category/ai/feed/',
+        sectionId: 'frontier',
+        tag: 'AI',
+        tagClass: 'tag-agent',
+        isRss: true,
+      },
+      {
+        name: 'Hugging Face Blog',
+        url: 'https://huggingface.co/blog/feed.xml',
+        sectionId: 'frontier',
+        tag: 'AI',
+        tagClass: 'tag-agent',
+        isRss: true,
+      },
+    ],
+  },
+
   // 每页最多文章数（从所有来源收集更多，确保 RSS 新文章能进入排序）
-  maxArticles: 10,
+  maxArticles: 15,
+
   // 输出路径
   outputFile: path.join(__dirname, '..', 'index.html'),
   templateFile: path.join(__dirname, '..', 'template.html')
 };
+
+// ─── Chunk 3: 技术标签词汇表 ─────────────────────────────────────────────
+const TECH_TAG_VOCABULARY = {
+  LLM: ['llm', 'language model', 'gpt', 'claude', 'gemini', 'chatgpt', 'gpt-4', 'gpt-5', 'openai', 'anthropic', 'large language model'],
+  Agent: ['agent', 'multi-agent', 'multiagent', 'agentic', '代理', '智能体', 'multi-agent', 'agentic workflow'],
+  RAG: ['rag', 'retrieval', 'retrieval-augmented', 'vector search', 'embedding'],
+  CodeGen: ['code generation', 'coding', 'code assistant', 'copilot', 'codex', 'code gen', 'programming'],
+  Multimodal: ['multimodal', 'vision', 'image generation', 'text-to-image', 'stable diffusion', 'video generation', 'audio'],
+  Embedding: ['embedding', 'embeddings', 'vector database', 'pinecone', 'chroma', 'qdrant'],
+  Finetuning: ['finetune', 'fine-tune', 'lora', 'rlhf', 'training', 'pre-training', 'domain adaptation'],
+  Inference: ['inference', 'inference engine', 'ollama', 'llama.cpp', '量化', 'quantization', 'vllm', 'tensorrt'],
+  Safety: ['safety', 'alignment', 'rlhf', 'constitutional ai', 'red teaming', 'jailbreak', 'safety evaluation'],
+  OpenSource: ['open source', 'open-source', 'github', 'apache', 'mit license', 'public release', 'open weights'],
+  Robotics: ['robot', 'robotics', '具身智能', 'embodied ai', 'autonomous', 'drone'],
+  Research: ['paper', 'arxiv', 'research', 'study', 'benchmark', 'evaluation', '学术', '研究'],
+};
+
+// ─── Chunk 3: 价值标签配置 ──────────────────────────────────────────────
+const VALUE_TAG_CONFIG = {
+  'open-source': '开源项目',
+  'vendor': '商业动态',
+  'frontier': '前沿探索',
+};
+
+// ─── Chunk 3: 来源可信度权重 ─────────────────────────────────────────────
+const SOURCE_QUALITY_WEIGHTS = {
+  // 开源分区
+  'GitHub Trending AI': 1.2,
+  'GitHub Trending AI (JS)': 1.1,
+  // 厂商分区（官方来源权重更高）
+  'Anthropic Blog': 1.5,
+  'OpenAI Blog': 1.5,
+  'Google AI Blog': 1.3,
+  // 前沿技术分区
+  'Hugging Face Blog': 1.4,
+  'VentureBeat AI': 1.1,
+  'TechCrunch AI': 1.0,
+  'AI and Us': 1.0,
+  'AI in Action': 1.0,
+  'Inside AI': 1.0,
+};
+
+// ─── Chunk 3: 根据内容关键词推断技术标签 ──────────────────────────────────
+function inferTechTags(article) {
+  const text = `${article.title} ${article.description}`.toLowerCase();
+  const tags = [];
+  for (const [tag, keywords] of Object.entries(TECH_TAG_VOCABULARY)) {
+    for (const kw of keywords) {
+      if (text.includes(kw.toLowerCase())) {
+        tags.push(tag);
+        break;
+      }
+    }
+  }
+  return tags.slice(0, 3); // 最多3个技术标签
+}
+
+// ─── Chunk 3: 推断价值标签 ────────────────────────────────────────────────
+function inferValueTag(article, sectionId) {
+  // 根据分区和内容综合判断价值标签
+  const text = `${article.title} ${article.description}`.toLowerCase();
+
+  if (sectionId === 'open-source') {
+    if (text.includes('github') && article.gh_stars && parseInt(article.gh_stars.replace(/[,+]/g, '')) > 100) return '热门项目';
+    if (text.includes('framework') || text.includes('library') || text.includes('tool')) return '实用工具';
+    return '开源项目';
+  }
+  if (sectionId === 'vendor') {
+    if (text.includes('model') || text.includes('gpt') || text.includes('claude') || text.includes('gemini')) return '模型发布';
+    if (text.includes('api') || text.includes('sdk') || text.includes('platform')) return '平台更新';
+    return '商业动态';
+  }
+  if (sectionId === 'frontier') {
+    if (text.includes('paper') || text.includes('arxiv') || text.includes('research')) return '学术成果';
+    if (text.includes('agent') || text.includes('multi')) return 'Agent 突破';
+    if (text.includes('robot') || text.includes('embodied')) return '具身智能';
+    return '前沿探索';
+  }
+  return VALUE_TAG_CONFIG[sectionId] || '技术动态';
+}
+
+// ─── Chunk 3: 技术价值评分函数 ───────────────────────────────────────────
+function scoreArticle(article) {
+  let score = 0;
+
+  // 1. 新鲜度评分（指数衰减，7天半衰期）
+  if (article.date) {
+    const daysAgo = (Date.now() - new Date(article.date).getTime()) / (1000 * 60 * 60 * 24);
+    const recencyScore = Math.pow(0.9, daysAgo / 7);
+    score += recencyScore * 30;
+  } else {
+    score -= 10; // 没有日期的文章扣分
+  }
+
+  // 2. 来源可信度评分
+  const sourceWeight = SOURCE_QUALITY_WEIGHTS[article._sourceName] || 1.0;
+  score += sourceWeight * 20;
+
+  // 3. GitHub stars 评分（仅开源分区）
+  if (article.gh_stars) {
+    const stars = parseInt(article.gh_stars.replace(/[,+]/g, '')) || 0;
+    const starScore = Math.log10(stars + 1) * 10;
+    score += starScore;
+  }
+
+  // 4. 描述质量评分（有意义的长度）
+  const descLen = (article.description || '').length;
+  if (descLen >= 50) {
+    score += Math.min(descLen / 10, 15);
+  } else if (descLen < 20) {
+    score -= 10;
+  }
+
+  // 5. 技术标签评分（有技术标签的文章更有价值）
+  if (article.techTags && article.techTags.length > 0) {
+    score += article.techTags.length * 3;
+  }
+
+  // 6. 有图片加一点分
+  if (article.image) {
+    score += 2;
+  }
+
+  return score;
+}
+
+// ─── Chunk 3: 质量过滤函数 ───────────────────────────────────────────────
+const AD_KEYWORDS = ['newsletter', 'sponsored', 'advertisement', 'advert', 'newsletter', 'subscribe to', 'email course'];
+const PR_PATTERNS = [/^pr[:\s]/i, /^\[pr\]/i, /robot[\s-]?generated/i, /automated[\s-]?post/i, /爬虫/i, /^auto[\s-]?post/i];
+const LOW_QUALITY_PATTERNS = [/^click here/i, /^read more/i, /^learn more/i, /^\s*$/];
+
+function isLowQuality(article) {
+  const title = article.title || '';
+  const desc = article.description || '';
+
+  // 1. PR / Robot 生成内容
+  for (const pattern of PR_PATTERNS) {
+    if (pattern.test(title)) return true;
+  }
+
+  // 2. 广告 / newsletter
+  for (const kw of AD_KEYWORDS) {
+    if (title.toLowerCase().includes(kw) || desc.toLowerCase().includes(kw)) return true;
+  }
+
+  // 3. 标题过短
+  if (title.trim().length < 15) return true;
+
+  // 4. 描述过短（低于30字符且无有效信息）
+  if (desc.trim().length < 30 && !article.gh_stars && !article.image) return true;
+
+  // 5. 纯 placeholder 内容
+  for (const pattern of LOW_QUALITY_PATTERNS) {
+    if (pattern.test(title.trim())) return true;
+  }
+
+  return false;
+}
+
+// 计算两个标题的相似度（简单词重叠）
+function titleSimilarity(a, b) {
+  const wordsA = new Set((a || '').toLowerCase().split(/\s+/).filter(w => w.length > 3));
+  const wordsB = new Set((b || '').toLowerCase().split(/\s+/).filter(w => w.length > 3));
+  if (wordsA.size === 0 || wordsB.size === 0) return 0;
+  let overlap = 0;
+  for (const word of wordsA) {
+    if (wordsB.has(word)) overlap++;
+  }
+  return overlap / Math.max(wordsA.size, wordsB.size);
+}
+
+/**
+ * 过滤低质量/重复主题内容
+ */
+function filterArticles(articles) {
+  const seen = [];
+  return articles.filter(article => {
+    // 1. 低质量过滤
+    if (isLowQuality(article)) {
+      console.log(`   🚫 过滤低质量: ${article.title.substring(0, 50)}`);
+      return false;
+    }
+
+    // 2. 重复主题过滤（标题相似度 > 0.6 视为重复）
+    for (const existing of seen) {
+      if (titleSimilarity(existing.title, article.title) > 0.6) {
+        console.log(`   🔁 过滤重复: "${article.title.substring(0, 40)}" ~ "${existing.title.substring(0, 40)}"`);
+        return false;
+      }
+    }
+
+    seen.push(article);
+    return true;
+  });
+}
+
+// ─── Chunk 3: 按分区分配文章（替换 naive sequential slicing）───────────────
+function assignArticlesToSections(articles) {
+  // 按 sourceCategory 建立分区池
+  const sectionPools = {};
+  for (const section of CONFIG.sections) {
+    sectionPools[section.id] = [];
+  }
+
+  // 分配文章到对应分区池
+  for (const article of articles) {
+    const sectionId = article.sourceCategory || 'frontier';
+    if (sectionPools[sectionId]) {
+      sectionPools[sectionId].push(article);
+    } else {
+      sectionPools['frontier'].push(article);
+    }
+  }
+
+  // 每个分区内部按评分排序
+  for (const sectionId of Object.keys(sectionPools)) {
+    sectionPools[sectionId].sort((a, b) => scoreArticle(b) - scoreArticle(a));
+  }
+
+  // 从每个分区取 top quota 条
+  const result = [];
+  for (const section of CONFIG.sections) {
+    const pool = sectionPools[section.id] || [];
+    const selected = pool.slice(0, section.quota);
+    console.log(`   📊 分区 "${section.id}" 得分前${selected.length}条（共${pool.length}条候选）`);
+    result.push(...selected);
+  }
+
+  return result;
+}
 
 const turndown = new Turndown({
   headingStyle: 'atx',
@@ -190,9 +491,65 @@ function extractRssArticles(rssText, source) {
       : '';
 
     if (title && link) {
-      articles.push({ title, url: link, date, description, sourceCategory: source.category, tag: source.tag, tagClass: source.tagClass });
+      articles.push({ title, url: link, date, description, sourceCategory: source.sectionId, tag: source.tag, tagClass: source.tagClass, _sourceName: source.name });
     }
   }
+
+  return articles;
+}
+
+/**
+ * 从 GitHub Trending 页面提取项目
+ */
+function extractGitHubTrendingArticles($, source) {
+  const articles = [];
+  const seen = new Set();
+
+  // GitHub Trending 结构: .BXgItc .Box-row
+  $('article.Box-row').each((index, element) => {
+    if (articles.length >= CONFIG.maxArticles) return false;
+
+    const $el = $(element);
+
+    // 项目名: <a href="/user/repo">repo</a> 或 <a href="/org/repo">repo</a>
+    const repoLink = $el.find('h2 a').first();
+    let repoName = repoLink.text().trim().replace(/\s+/g, '');
+    const href = repoLink.attr('href') || '';
+    const fullName = href.replace(/^\//, ''); // e.g. "user/repo"
+
+    // 描述
+    const desc = $el.find('p').first().text().trim().substring(0, 200);
+
+    // 编程语言
+    const lang = $el.find('[itemprop="programmingLanguage"]').text().trim() ||
+                 $el.find('span.text-bold').text().trim() || '';
+
+    // 今日星标数
+    const starsText = $el.find('a.Link--muted').first().text().trim();
+    const stars = starsText ? starsText.replace(/,/g, '') : '';
+
+    // 今日 star 数的链接
+    const starLink = $el.find('a.Link--muted').first().attr('href') || '';
+
+    if (fullName && !seen.has(fullName)) {
+      seen.add(fullName);
+      articles.push({
+        title: fullName,
+        url: `https://github.com/${fullName}`,
+        date: new Date().toISOString().substring(0, 10),
+        description: desc,
+        sourceCategory: source.sectionId,
+        tag: source.tag,
+        tagClass: source.tagClass,
+        _sourceName: source.name,
+        // GitHub 特有字段
+        gh_stars: stars,
+        gh_lang: lang,
+        gh_starsLink: starLink ? `https://github.com${starLink}` : '',
+        gh_description: desc,
+      });
+    }
+  });
 
   return articles;
 }
@@ -204,6 +561,11 @@ function extractArticles($, source, rssText) {
   // 如果是 RSS 来源
   if (source.isRss) {
     return extractRssArticles(rssText || $.html(), source);
+  }
+
+  // 如果是 GitHub Trending
+  if (source.isGitHubTrending) {
+    return extractGitHubTrendingArticles($, source);
   }
   const articles = [];
   const seen = new Set();
@@ -237,7 +599,7 @@ function extractArticles($, source, rssText) {
     article.date = dateEl.text().trim().substring(0, 10) || '';
     const descEl = $('p:not(:empty)', element).first();
     article.description = descEl.text().trim().substring(0, 200);
-    article.sourceCategory = source.category;
+    article.sourceCategory = source.sectionId;
     article.tag = source.tag;
     article.tagClass = source.tagClass;
 
@@ -266,9 +628,10 @@ function extractArticles($, source, rssText) {
         url: href,
         date: '',
         description: '',
-        sourceCategory: source.category,
+        sourceCategory: source.sectionId,
         tag: source.tag,
         tagClass: source.tagClass,
+        _sourceName: source.name,
       });
     });
   }
@@ -280,69 +643,89 @@ function extractArticles($, source, rssText) {
  * 抓取所有来源
  */
 /**
- * 使用 MiniMax AI 生成文章摘要（中文，一句话概括）
+ * 使用 MiniMax AI 生成中文摘要（100-200 字）
  */
 async function generateSummary(article) {
   if (!article.title || !article.description) return article;
 
-  const prompt = `一句话概括这段新闻（限50字内）：${article.title}。${article.description.substring(0, 200)}`;
+  const text = `${article.title}。${article.description}`.substring(0, 500);
+  const prompt = `请用中文为这篇新闻写一段简短的摘要，要求：
+1. 字数控制在 100 到 200 字之间
+2. 提取文章的核心内容和价值
+3. 语言简洁专业
+新闻内容：${text}`;
 
-  // 直接使用原文描述作为摘要，跳过AI生成
-  const summary = article.description ? article.description.substring(0, 100).trim() : '';
-  if (summary) {
-    return { ...article, summary };
-  }
-  return article;
-}
+  try {
+    const response = await fetch('https://api.minimax.chat/v1/text/chatcompletion_v2', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.MINIMAX_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: 'MiniMax-Text-01',
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 300,
+      }),
+      signal: AbortSignal.timeout(15000),
+    });
 
-async function translateToChinese(text) {
-  if (!text || text.trim().length === 0) return text;
+    if (!response.ok) throw new Error(`MiniMax API error: ${response.status}`);
 
-  const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
-
-  async function tryTranslate(provider, attempt = 1) {
-    if (attempt > 2) return null;
-    try {
-      const result = await provider();
-      if (result) return result;
-    } catch (err) {
-      console.warn(`   ⚠️ 翻译失败（尝试 ${attempt}/2）: ${err.message}`);
+    const data = await response.json();
+    const content = data?.choices?.[0]?.message?.content;
+    if (content) {
+      const summary = content.trim().substring(0, 200);
+      return { ...article, summary };
     }
-    await sleep(attempt * 800);
-    return tryTranslate(provider, attempt + 1);
+  } catch (err) {
+    console.warn(`   ⚠️ AI 摘要生成失败，使用截断摘要: ${err.message}`);
   }
 
-  // MyMemory 免费 API，带重试
-  const tryMyMemory = async () => {
-    const { data } = await axios.get(
-      'https://api.mymemory.translated.net/get',
-      {
-        params: {
-          q: text.substring(0, 500),
-          langpair: 'en|zh',
-          de: 'ai-agent-weekly@proton.me',
-        },
-        timeout: 12000,
-      }
-    );
-    if (data && data.responseStatus === 200 && data.responseData && data.responseData.translatedText) {
-      return data.responseData.translatedText;
-    }
-    return null;
-  };
-
-  const result = await tryTranslate(tryMyMemory);
-  return result || text;
+  // Fallback：纯截断
+  const cleaned = (article.description || '').replace(/\s+/g, ' ').trim();
+  const summary = cleaned ? cleaned.substring(0, 200).trim() : '';
+  return summary ? { ...article, summary } : article;
 }
 
-// 标题不做翻译，保持原样
-async function translateTitle(text) {
-  return text;
-}
-
+// 翻译功能已移除
 async function enrichArticle(article) {
   const rawTitle = (article.title || '').replace(/&#039;/g, "'").replace(/\s+/g, ' ').trim();
   const rawDesc = (article.description || '').replace(/&#039;/g, "'").replace(/\s+/g, ' ').trim();
+
+  // GitHub 项目页面的 enrich 特殊处理
+  if (article.url && article.url.includes('github.com') && !article.url.includes('/issues/') && !article.url.includes('/pull/')) {
+    try {
+      const $ = await fetchPage(article.url);
+      if ($) {
+        const metaTitle = $('meta[property="og:title"]').attr('content') || $('title').text().trim();
+        const metaDesc = $('meta[property="og:description"]').attr('content') || $('meta[name="description"]').attr('content') || '';
+        const metaImage = $('meta[property="og:image"]').attr('content') || '';
+
+        // GitHub 项目描述
+        const ghDesc = $('[itemprop="description"]').text().trim() ||
+                       $('p.exact_issues_results').text().trim() ||
+                       metaDesc;
+
+        const title = (metaTitle || rawTitle).replace(/&#039;/g, "'").replace(/\s+/g, ' ').replace(/\s*\|\s*GitHub\s*$/i, '').trim();
+        const desc = (ghDesc || rawDesc).replace(/&#039;/g, "'").replace(/\s+/g, ' ').trim();
+
+        return {
+          ...article,
+          title,
+          description: desc,
+          image: metaImage || article.image,
+        };
+      }
+    } catch (error) {
+      // 页面抓取失败不影响
+    }
+
+    return {
+      ...article,
+      description: rawDesc,
+    };
+  }
 
   try {
     const $ = await fetchPage(article.url);
@@ -354,15 +737,11 @@ async function enrichArticle(article) {
 
       const title = (metaTitle || rawTitle).replace(/&#039;/g, "'").replace(/\s+/g, ' ').replace(/\s*\|\s*TechCrunch\s*$/i, '').trim();
       const desc = (metaDesc || rawDesc).replace(/&#039;/g, "'").replace(/\s+/g, ' ').trim();
-      const [translatedTitle, translatedDesc] = await Promise.all([
-        translateTitle(title),
-        translateToChinese(desc),
-      ]);
 
       return {
         ...article,
-        title: translatedTitle || title,
-        description: translatedDesc || desc,
+        title,
+        description: desc,
         date: metaDate ? metaDate.substring(0, 10) : article.date,
         image: metaImage || article.image,
       };
@@ -371,26 +750,35 @@ async function enrichArticle(article) {
     // 页面抓取失败不影响翻译
   }
 
-  const [translatedTitle, translatedDesc] = await Promise.all([
-    translateTitle(rawTitle),
-    translateToChinese(rawDesc),
-  ]);
-
   return {
     ...article,
-    title: translatedTitle || rawTitle,
-    description: translatedDesc || rawDesc,
+    title: rawTitle,
+    description: rawDesc,
   };
+}
+
+/**
+ * 扁平化所有分区来源为一个统一数组，同时保留 sectionId
+ */
+function getAllSources() {
+  const allSources = [];
+  for (const sectionId of Object.keys(CONFIG.sources)) {
+    for (const source of CONFIG.sources[sectionId]) {
+      allSources.push(source);
+    }
+  }
+  return allSources;
 }
 
 async function scrapeAllSources() {
   const allArticles = [];
   const seen = new Set();
   const pendingEnrichments = [];
+  const allSources = getAllSources();
 
-  for (const source of CONFIG.sources) {
-    console.log(`\n📡 正在抓取: ${source.name}`);
-    
+  for (const source of allSources) {
+    console.log(`\n📡 正在抓取: ${source.name} [${source.sectionId}]`);
+
     let articles = [];
     if (source.isRss) {
       // RSS 源头直接拿原始文本，用正则解析
@@ -400,6 +788,13 @@ async function scrapeAllSources() {
         console.log(`   📰 RSS 抽取到 ${articles.length} 篇`);
       } catch (err) {
         console.warn(`   ⚠️ RSS 抓取失败: ${source.url} — ${err.message}`);
+      }
+    } else if (source.isGitHubTrending) {
+      // GitHub Trending 页面
+      const $ = await fetchPage(source.url);
+      if ($) {
+        articles = extractArticles($, source);
+        console.log(`   📰 GitHub Trending 抽取到 ${articles.length} 个项目`);
       }
     } else {
       const $ = await fetchPage(source.url);
@@ -434,7 +829,20 @@ async function scrapeAllSources() {
     return dateB - dateA;
   });
 
-  return allArticles.slice(0, CONFIG.maxArticles);
+  // ── Chunk 3: 质量过滤 ────────────────────────────────────────────
+  const filtered = filterArticles(allArticles);
+  console.log(`\n🧹 质量过滤后剩余 ${filtered.length} 篇`);
+
+  // ── Chunk 3: 填充 techTags 和 valueTag ───────────────────────────
+  for (const article of filtered) {
+    article.techTags = inferTechTags(article);
+    article.valueTag = inferValueTag(article, article.sourceCategory);
+  }
+
+  // ── Chunk 3: 按分区评分分配（替换 naive sequential slicing）───────
+  const sectionedArticles = assignArticlesToSections(filtered);
+
+  return sectionedArticles.slice(0, CONFIG.maxArticles);
 }
 
 /**
@@ -443,15 +851,67 @@ async function scrapeAllSources() {
 function generateArticleCard(article, isFeatured = false) {
   const imageIndex = Math.abs(article.title.hashCode()) % 10;
   const imageUrl = article.image || `https://picsum.photos/seed/${imageIndex}/800/400`;
-  
+
   const tagMap = {
     'tag-agent': { bg: 'linear-gradient(135deg, #6366f1, #8b5cf6)', label: article.tag || 'Agent' },
     'tag-automation': { bg: 'linear-gradient(135deg, #f59e0b, #d97706)', label: '自动化' },
     'tag-physical': { bg: 'linear-gradient(135deg, #10b981, #059669)', label: '具身智能' },
     'tag-research': { bg: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', label: '研究' },
-    'tag-finance': { bg: 'linear-gradient(135deg, #ec4899, #db2777)', label: '金融' }
+    'tag-finance': { bg: 'linear-gradient(135deg, #ec4899, #db2777)', label: '金融' },
+    'tag-vendor': { bg: 'linear-gradient(135deg, #8b5cf6, #c026d3)', label: article.tag || '厂商' },
+    'tag-opensource': { bg: 'linear-gradient(135deg, #10b981, #059669)', label: '开源' },
   };
   const tagInfo = tagMap[article.tagClass] || { bg: 'linear-gradient(135deg, #6366f1, #764ba2)', label: article.tag || 'AI' };
+
+  // ── Chunk 3: 技术标签渲染 ────────────────────────────────────────
+  const TECH_TAG_STYLES = {
+    LLM: { bg: '#e0e7ff', color: '#4338ca' },
+    Agent: { bg: '#ede9fe', color: '#7c3aed' },
+    RAG: { bg: '#dcfce7', color: '#15803d' },
+    CodeGen: { bg: '#fef3c7', color: '#b45309' },
+    Multimodal: { bg: '#fce7f3', color: '#be185d' },
+    Embedding: { bg: '#e0f2fe', color: '#0369a1' },
+    Finetuning: { bg: '#fee2e2', color: '#b91c1c' },
+    Inference: { bg: '#f1f5f9', color: '#475569' },
+    Safety: { bg: '#fef9c3', color: '#854d0e' },
+    OpenSource: { bg: '#d1fae5', color: '#065f46' },
+    Robotics: { bg: '#ccfbf1', color: '#0f766e' },
+    Research: { bg: '#dbEafe', color: '#1d4ed8' },
+  };
+  const techTagsHTML = (article.techTags && article.techTags.length > 0)
+    ? article.techTags.map(tag => {
+        const style = TECH_TAG_STYLES[tag] || { bg: '#f3f4f6', color: '#374151' };
+        return `<span class="tech-tag" style="background:${style.bg};color:${style.color}">${tag}</span>`;
+      }).join('')
+    : '';
+
+  // ── Chunk 3: 价值标签渲染 ────────────────────────────────────────
+  const VALUE_TAG_STYLES = {
+    '热门项目': { bg: '#fef3c7', color: '#92400e' },
+    '实用工具': { bg: '#d1fae5', color: '#065f46' },
+    '商业动态': { bg: '#ede9fe', color: '#6d28d9' },
+    '模型发布': { bg: '#dbeafe', color: '#1e40af' },
+    '平台更新': { bg: '#fce7f3', color: '#9d174d' },
+    '学术成果': { bg: '#e0e7ff', color: '#3730a3' },
+    'Agent 突破': { bg: '#fef9c3', color: '#78350f' },
+    '具身智能': { bg: '#ccfbf1', color: '#115e59' },
+    '前沿探索': { bg: '#f1f5f9', color: '#334155' },
+    '开源项目': { bg: '#d1fae5', color: '#064e3b' },
+    '技术动态': { bg: '#f3f4f6', color: '#374151' },
+  };
+  const valueStyle = VALUE_TAG_STYLES[article.valueTag] || { bg: '#f3f4f6', color: '#374151' };
+  const valueTagHTML = article.valueTag
+    ? `<span class="value-tag" style="background:${valueStyle.bg};color:${valueStyle.color}">${article.valueTag}</span>`
+    : '';
+
+  // GitHub 项目特殊描述增强
+  let extraMeta = '';
+  if (article.gh_stars) {
+    extraMeta += `<span class="gh-stars">⭐ ${article.gh_stars}</span>`;
+  }
+  if (article.gh_lang) {
+    extraMeta += `<span class="gh-lang">• ${article.gh_lang}</span>`;
+  }
 
   if (isFeatured) {
     return `
@@ -467,10 +927,7 @@ function generateArticleCard(article, isFeatured = false) {
         </h2>
         ${article.summary ? `<p class="card-summary">${article.summary}</p>` : `<p class="card-desc">${article.description}</p>`}
         <div class="card-footer">
-          <div class="card-source">
-            <span class="icon" style="background:${tagInfo.bg.split(',')[0].replace('linear-gradient(135deg, ', '')}">${article.title.charAt(0)}</span>
-            artificialintelligence-news.com · ${article.date}
-          </div>
+          <span class="card-date">${article.date}</span>
           <a href="${article.url}" target="_blank" class="read-btn">阅读原文 →</a>
         </div>
       </div>
@@ -484,15 +941,14 @@ function generateArticleCard(article, isFeatured = false) {
       </div>
       <div class="card-content">
         <span class="card-tag" style="background:${tagInfo.bg}">${tagInfo.label}</span>
+        ${valueTagHTML ? `<span class="value-tag" style="background:${valueStyle.bg};color:${valueStyle.color};margin-left:0.3rem">${article.valueTag}</span>` : ''}
         <h3 class="card-title">
           <a href="${article.url}" target="_blank">${article.title}</a>
         </h3>
         ${article.summary ? `<p class="card-summary">${article.summary}</p>` : `<p class="card-desc">${article.description}</p>`}
+        ${techTagsHTML ? `<div class="card-tech-tags">${techTagsHTML}</div>` : ''}
         <div class="card-meta">
-          <div class="card-source">
-            <span class="icon" style="background:${tagInfo.bg.split(',')[0].replace('linear-gradient(135deg, ', '')}">${article.title.charAt(0)}</span>
-            artificialintelligence-news.com
-          </div>
+          ${extraMeta ? `<div class="card-extra-meta">${extraMeta}</div>` : '<div></div>'}
           <span class="card-date">${article.date}</span>
         </div>
       </div>
@@ -528,11 +984,23 @@ function formatBeijingTimestamp(date = new Date()) {
 function generateHTML(articles) {
   const { updateDate, updateTime } = formatBeijingTimestamp();
 
-  const featured = articles[0];
-  const rest = articles.slice(1);
-  
-  const featuredHTML = generateArticleCard(featured, true);
-  const articlesHTML = rest.map(a => generateArticleCard(a)).join('\n');
+  // 将文章分配到三个分区（每区配额 5 条）
+  const sectionsHTML = CONFIG.sections.map((section, sIdx) => {
+    const start = sIdx * section.quota;
+    const slice = articles.slice(start, start + section.quota);
+    const cardsHTML = slice.map(a => generateArticleCard(a)).join('\n');
+    return `
+    <section class="section-block" data-section="${section.id}">
+      <h2 class="section-title">
+        <span class="section-icon">${section.icon}</span>
+        ${section.label}
+        <span class="section-count">${slice.length}</span>
+      </h2>
+      <div class="article-list">
+        ${cardsHTML}
+      </div>
+    </section>`;
+  }).join('\n');
 
   const html = `<!DOCTYPE html>
 <html lang="zh-CN">
@@ -710,6 +1178,20 @@ function generateHTML(articles) {
             letter-spacing: 0.3px; color: white;
             margin-bottom: 0.75rem; width: fit-content;
         }
+        .article-card .tech-tag {
+            display: inline-block; padding: 0.15rem 0.5rem; border-radius: 50px;
+            font-size: 0.65rem; font-weight: 600;
+            letter-spacing: 0.2px; margin-right: 0.25rem;
+        }
+        .article-card .value-tag {
+            display: inline-block; padding: 0.15rem 0.5rem; border-radius: 50px;
+            font-size: 0.65rem; font-weight: 600;
+            letter-spacing: 0.2px;
+        }
+        .article-card .card-tech-tags {
+            display: flex; flex-wrap: wrap; gap: 0.25rem;
+            margin-top: 0.4rem; margin-bottom: 0.2rem;
+        }
         .article-card .card-title {
             font-size: 1.1rem; font-weight: 600;
             margin-bottom: 0.6rem; line-height: 1.45;
@@ -738,12 +1220,7 @@ function generateHTML(articles) {
             border-top: 1px solid var(--border);
             transition: border-color 0.4s ease;
         }
-        .article-card .card-source { display: flex; align-items: center; gap: 0.5rem; color: var(--text-muted); font-size: 0.8rem; }
-        .article-card .card-source .icon {
-            width: 20px; height: 20px; border-radius: 5px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 10px; color: white; font-weight: 700;
-        }
+        .article-card .card-extra-meta { display: flex; align-items: center; gap: 0.5rem; color: var(--text-muted); font-size: 0.8rem; flex-wrap: wrap; }
         .article-card .card-date { color: var(--text-muted); font-size: 0.78rem; }
         .featured-card {
             background: var(--card-bg); border: 1px solid var(--border);
@@ -788,12 +1265,6 @@ function generateHTML(articles) {
             padding: 0.6rem 1rem; border-radius: 6px;
         }
         .featured-card .card-footer { display: flex; align-items: center; justify-content: space-between; }
-        .featured-card .card-source { display: flex; align-items: center; gap: 0.5rem; color: var(--text-muted); font-size: 0.82rem; }
-        .featured-card .card-source .icon {
-            width: 22px; height: 22px; border-radius: 6px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 11px; color: white; font-weight: 700;
-        }
         .read-btn {
             display: inline-flex; align-items: center; gap: 0.4rem;
             padding: 0.5rem 1.2rem; border-radius: 50px;
@@ -802,8 +1273,6 @@ function generateHTML(articles) {
             text-decoration: none; transition: all 0.3s ease;
         }
         .read-btn:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(99,102,241,0.4); }
-        .source-note { text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.82rem; border-top: 1px solid var(--border); margin-top: 2.5rem; transition: border-color 0.4s ease; }
-        .source-note a { color: var(--primary); text-decoration: none; }
         footer { text-align: center; padding: 2rem; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 0.8rem; transition: border-color 0.4s ease; }
         footer a { color: var(--primary); text-decoration: none; }
         .progress-bar { position: fixed; top: 64px; left: 0; height: 3px; background: var(--gradient-1); z-index: 999; transition: width 0.1s; }
@@ -815,6 +1284,38 @@ function generateHTML(articles) {
         ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
         @keyframes fadeInRight { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: translateX(0); } }
         .article-card { animation: fadeInRight 0.4s ease forwards; }
+        /* ── 三分区结构 ─────────────────────────────────────── */
+        .section-block {
+            margin-bottom: 3rem;
+        }
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 1.2rem;
+            padding-bottom: 0.6rem;
+            border-bottom: 2px solid var(--border);
+            transition: color 0.4s ease, border-color 0.4s ease;
+        }
+        .section-title .section-icon {
+            font-size: 1.2rem;
+        }
+        .section-title .section-count {
+            margin-left: auto;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: var(--primary);
+            color: white;
+            padding: 0.15rem 0.55rem;
+            border-radius: 50px;
+        }
+        .section-block:nth-child(1) .section-title { border-bottom-color: #6366f1; }
+        .section-block:nth-child(2) .section-title { border-bottom-color: #f59e0b; }
+        .section-block:nth-child(3) .section-title { border-bottom-color: #10b981; }
+
         @media (max-width: 768px) {
             .featured-card { flex-direction: column; }
             .featured-card .card-thumb { width: 100%; min-height: 200px; }
@@ -823,6 +1324,7 @@ function generateHTML(articles) {
             .hero h1 { font-size: 2rem; }
             .hero-stats { gap: 1.5rem; }
             .hero-stats .stat-num { font-size: 1.4rem; }
+            .section-title { font-size: 1rem; }
         }
     </style>
 </head>
@@ -846,11 +1348,11 @@ function generateHTML(articles) {
     <section class="hero">
         <div class="hero-inner">
             <div class="pill">🧠 专注 · AI Agent 前沿</div>
-            <h1>AI Agent 本周动态</h1>
+            <h1>AI 技术情报站</h1>
             <p>追踪 AI Agent、具身智能、多智能体系统的最新进展与行业应用</p>
             <div class="hero-stats">
                 <div class="stat-item">
-                    <div class="stat-num">${articles.length}</div>
+                    <div class="stat-num">15</div>
                     <div class="stat-label">篇精选文章</div>
                 </div>
                 <div class="stat-item">
@@ -866,16 +1368,7 @@ function generateHTML(articles) {
     </section>
 
     <main>
-        ${featuredHTML}
-
-        <div class="article-list" id="articleList">
-            ${articlesHTML}
-        </div>
-
-        <div class="source-note">
-            📡 数据来源：<a href="https://www.artificialintelligence-news.com/" target="_blank">artificialintelligence-news.com</a> · 
-            自动抓取 · 更新时间：${updateDate} ${updateTime}
-        </div>
+        ${sectionsHTML}
 
         <div id="emptyState" class="empty-state">
             <div class="empty-icon">🔍</div>
@@ -884,7 +1377,7 @@ function generateHTML(articles) {
     </main>
 
     <footer>
-        <p>AI Agent 前沿动态 | 数据来源：artificialintelligence-news.com（每日自动更新）</p>
+        <p>AI Agent 前沿动态 | 每日自动更新</p>
     </footer>
 
     <script>
@@ -906,28 +1399,36 @@ function generateHTML(articles) {
         function filterNews(category) {
             document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
             event.target.closest('.category-btn').classList.add('active');
-            const featured = document.getElementById('featured');
-            const list = document.getElementById('articleList');
+            const sections = document.querySelectorAll('.section-block');
             const emptyState = document.getElementById('emptyState');
-            if (featured) featured.style.display = (category === 'all') ? 'flex' : 'none';
-            const cards = list.querySelectorAll('.article-card');
             let visibleCount = 0;
-            cards.forEach((card, index) => {
-                const show = category === 'all' || card.dataset.category === category;
-                if (show) {
-                    visibleCount++;
-                    if (card.style.display === 'none') {
-                        card.style.display = 'flex';
-                        card.style.animation = 'none';
-                        card.offsetHeight;
-                        card.style.opacity = '0';
-                        card.style.transform = 'translateX(-12px)';
-                        requestAnimationFrame(() => {
-                            card.style.animation = 'fadeInRight 0.4s ease ' + (index * 0.05) + 's forwards';
-                        });
+            sections.forEach(section => {
+                const cards = section.querySelectorAll('.article-card');
+                const sectionTitle = section.querySelector('.section-title');
+                let sectionVisible = 0;
+                cards.forEach((card, index) => {
+                    const show = category === 'all' || card.dataset.category === category;
+                    if (show) {
+                        sectionVisible++;
+                        visibleCount++;
+                        if (card.style.display === 'none') {
+                            card.style.display = 'flex';
+                            card.style.animation = 'none';
+                            card.offsetHeight;
+                            card.style.opacity = '0';
+                            card.style.transform = 'translateX(-12px)';
+                            requestAnimationFrame(() => {
+                                card.style.animation = 'fadeInRight 0.4s ease ' + (index * 0.05) + 's forwards';
+                            });
+                        }
+                    } else {
+                        card.style.display = 'none';
                     }
-                } else {
-                    card.style.display = 'none';
+                });
+                section.style.display = sectionVisible > 0 ? 'block' : 'none';
+                if (sectionTitle) {
+                    const countEl = sectionTitle.querySelector('.section-count');
+                    if (countEl) countEl.textContent = sectionVisible;
                 }
             });
             emptyState.style.display = visibleCount === 0 ? 'block' : 'none';
@@ -994,4 +1495,16 @@ if (!String.prototype.hashCode) {
   };
 }
 
-main().catch(console.error);
+if (require.main === module) {
+  main().catch(console.error);
+}
+
+module.exports = {
+  generateSummary,
+  filterArticles,
+  scoreArticle,
+  inferTechTags,
+  inferValueTag,
+  assignArticlesToSections,
+  CONFIG,
+};

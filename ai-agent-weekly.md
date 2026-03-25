@@ -1,6 +1,8 @@
 # ai-agent-weekly 项目进展与后续计划
 
 > 维护约定：以后每次针对 `ai-agent-weekly` 项目做修改时，都要同步更新这份 `ai-agent-weekly.md`，确保文档与实际状态保持一致。
+>
+> 补充约定（2026-03-25）：页面前台不展示“数据来源”文案；来源信息仅保留在程序内部，用于抓取、分区、打分和过滤。
 
 ## 1. 项目概览
 
@@ -53,7 +55,7 @@
 ### 2.3 内容策略已落地
 
 目前页面策略已经调整为：
-- **仅保留 10 篇精选文章**
+- **保留 15 篇精选文章，分成 3 个分区（开源项目 5 / 厂商动态 5 / 前沿技术 5）**
 - **标题保持原标题**（不翻译、不再做 AI 总结）
 - **摘要为中文简要概括**
 - **摘要长度控制在 100 字以内**
@@ -75,7 +77,7 @@
 
 最终结论：
 - OpenAI / MiniMax 一类模型在标题生成场景下，容易输出冗余思考过程
-- 对“资讯站点标题”来说，**稳定、干净、无污染输出** 比“看起来更聪明”更重要
+- 对"资讯站点标题"来说，**稳定、干净、无污染输出** 比"看起来更聪明"更重要
 - 因此当前保留原标题是最稳的选择
 
 ---
@@ -138,7 +140,7 @@
 - 实测曾出现北京时间 09:25 / 09:44 才实际执行的问题
 - 所以改为提前一小时，给 GitHub 的延迟留缓冲
 
-也就是说，这次调整的目标不是“更准点”，而是“更大概率在用户真正起床看网页前完成更新”。
+也就是说，这次调整的目标不是"更准点"，而是"更大概率在用户真正起床看网页前完成更新"。
 
 ---
 
@@ -155,7 +157,7 @@
 - 检查生成 HTML 至少包含 featured/article cards
 - 检查时间逻辑显式使用 `Asia/Shanghai`
 
-虽然测试覆盖还不高，但比纯“拍脑袋部署”已经成熟很多。
+虽然测试覆盖还不高，但比纯"拍脑袋部署"已经成熟很多。
 
 ---
 
@@ -186,7 +188,7 @@
 ### 4.1 README 与当前行为不完全一致
 
 `README.md` 里仍写着：
-- “每天北京时间 08:00 自动更新”
+- "每天北京时间 08:00 自动更新"
 
 但当前真实配置已经改成：
 - UTC 23:00
@@ -235,7 +237,7 @@
 
 ## 5. 已确认的新方向（2026-03-25）
 
-项目后续不再沿着“泛 AI 新闻页”优化，而是转向 **技术情报站 / 技术雷达** 方向。
+项目后续不再沿着"泛 AI 新闻页"优化，而是转向 **技术情报站 / 技术雷达** 方向。
 
 已经确认的新目标：
 - 首页总数改成 **15 条**
@@ -244,7 +246,7 @@
   - 厂商动态（5）
   - 前沿技术（5）
 - 标题保持原标题
-- 摘要保留中文技术概括
+- 摘要由 MiniMax AI 生成中文摘要（目标 100~200 字）；API 失败时 fallback 到原文截断（200 字）
 - 更强调技术价值、可落地性、来源可信度，而不是泛新闻热度
 
 对应设计文档：
@@ -252,6 +254,100 @@
 
 对应实施计划：
 - `docs/superpowers/plans/2026-03-25-ai-agent-weekly-technical-radar.md`
+
+---
+
+## 6. Chunk 1 已完成（2026-03-25）
+
+**首页结构升级：10 条单流 → 15 条三分区**
+
+### 实现内容
+- `scripts/scrape.js`：`maxArticles` 从 10 升级到 15，新增 `CONFIG.sections` 三分区配额配置
+- `generateHTML()` 重构：去掉 featured card，改用三分区渲染（开源项目 / 厂商动态 / 前沿技术）
+- 新增分区 CSS 样式：`.section-block`、`.section-title`、每区独立底边线颜色
+- 保留原有卡片字段：原标题、中文摘要、来源、时间、图片
+- `scripts/smoke-check.js`：更新为同时支持 featured card 或 section block 两种结构
+- 新增测试：`tests/technical-radar.test.js`（8 个测试用例，覆盖配置、HTML 结构、CSS 类）
+
+### 页面结构
+```html
+<main>
+  <section class="section-block" data-section="open-source">
+    <h2 class="section-title">🛠️ 开源项目 <span class="section-count">5</span></h2>
+    <div class="article-list"><!-- 5 article-cards --></div>
+  </section>
+  <section class="section-block" data-section="vendor">
+    <h2 class="section-title">🏢 厂商动态 <span class="section-count">5</span></h2>
+    <div class="article-list"><!-- 5 article-cards --></div>
+  </section>
+  <section class="section-block" data-section="frontier">
+    <h2 class="section-title">🔬 前沿技术 <span class="section-count">5</span></h2>
+    <div class="article-list"><!-- 5 article-cards --></div>
+  </section>
+</main>
+```
+
+### 待完成（Chunk 2+）
+- ~~数据源重构：按分区分配不同来源（GitHub Trending → 开源项目，官方博客 → 厂商动态）~~ ✅ Chunk 2 已完成
+- 技术价值评分函数
+- 质量过滤规则
+
+## 6.1 Chunk 2 已完成（2026-03-25）
+
+**数据源重构：按分区独立配置 + GitHub Trending + 厂商官方博客**
+
+### 实现内容
+- `scripts/scrape.js`：`CONFIG.sources` 从扁平数组重构为按分区（`open-source` / `vendor` / `frontier`）组织的对象
+- 新增 `extractGitHubTrendingArticles()` 函数：从 GitHub Trending 页面提取 AI/ML 项目，支持 `gh_stars`（今日 star 数）、`gh_lang`（编程语言）等字段
+- 新增 `getAllSources()` 辅助函数：将分区来源扁平化为统一数组
+- `enrichArticle()` 新增 GitHub 分支：GitHub 项目页面特殊处理（提取项目描述、避免标题被 GitHub 模板污染）
+- `generateArticleCard()` 新增 `tag-vendor` 和 `tag-opensource` 标签类型，以及 GitHub star 数和语言渲染
+- `scrapeAllSources()` 更新：按分区来源分别抓取，日志显示 `[sectionId]`，新增 `isGitHubTrending` 处理分支
+
+### 新增数据源
+- **开源项目分区**：`GitHub Trending Python` + `GitHub Trending JavaScript`（每日 AI/ML 热门项目）
+- **厂商动态分区**：`OpenAI Blog RSS` + `Anthropic Blog RSS` + `Google AI Blog RSS`（官方一手动态）
+- **前沿技术分区**：保留原有的 `artificialintelligence-news.com` 分类页 + TechCrunch/VentureBeat/HuggingFace RSS
+
+### 规范化文章结构
+所有抓取结果统一包含：
+```javascript
+{
+  title,           // 原标题
+  url,             // 文章/项目链接
+  date,            // 发布日期
+  description,     // 英文描述
+  sourceCategory,   // 归属分区（open-source / vendor / frontier）
+  tag,             // 标签文字
+  tagClass,        // 标签样式类
+  _sourceName,     // 来源名称（用于评分权重）
+  techTags,        // 技术标签数组（最多3个：LLM、Agent、RAG、CodeGen、Multimodal 等）
+  valueTag,        // 价值标签字符串（如「热门项目」「模型发布」「学术成果」）
+  // GitHub 项目额外字段
+  gh_stars,        // 今日 star 数
+  gh_lang,         // 编程语言
+  gh_starsLink,    // star 趋势链接
+}
+```
+
+### 测试覆盖
+- `tests/chunk2-sources.test.js`（9 个测试用例，覆盖分区配置、GitHub 提取、厂商来源规范化、enrich 特殊处理）
+- `tests/tags.test.js`（8 个测试用例，覆盖 techTags/valueTag 字段、标签词汇表、渲染逻辑）
+- `tests/scoring.test.js`（8 个测试用例，覆盖评分函数各维度、per-section bucketing）
+- `tests/filtering.test.js`（8 个测试用例，覆盖各类过滤规则、pipeline 顺序）
+- 所有 45 个测试用例通过
+
+### 已完成（Chunk 3）
+- **技术标签（techTags）**：12 类技术标签（LLM、Agent、RAG、CodeGen、Multimodal、Embedding、Finetuning、Inference、Safety、OpenSource、Robotics、Research），基于 `TECH_TAG_VOCABULARY` 关键词匹配推断，每篇文章最多显示 3 个标签
+- **价值标签（valueTag）**：根据分区（开源/厂商/前沿）和内容关键词推断，包括「热门项目」「实用工具」「模型发布」「平台更新」「学术成果」「Agent 突破」「具身智能」等标签，带颜色样式渲染到卡片中
+- **技术价值评分函数 `scoreArticle(article)`**：6 维评分体系——新鲜度（指数衰减，7 天半衰期）、来源可信度（`SOURCE_QUALITY_WEIGHTS`）、GitHub stars（对数加成）、描述质量（有意义长度加成）、技术标签加成、有图加成
+- **质量过滤函数 `filterArticles(articles)`**：5 类规则——PR/Robot 生成内容过滤（`PR_PATTERNS`）、广告/newsletter 过滤（`AD_KEYWORDS`）、标题过短过滤（<15 字符）、描述过短过滤（<30 字符且无 gh_stars/image）、重复主题过滤（`titleSimilarity` 词重叠率 >0.6）
+- **按分区评分分配 `assignArticlesToSections(articles)`**：替换 naive sequential slicing，按 `sourceCategory` 建立分区池 → 每池内按 `scoreArticle` 排序 → 每区取 top quota，取代原有的全局排序后按位置切片
+- **卡片渲染增强**：技术标签（`.tech-tag` pill）和价值标签（`.value-tag` badge）渲染到 `generateArticleCard`，带颜色样式（`TECH_TAG_STYLES` / `VALUE_TAG_STYLES`）
+- **CSS 增强**：`.tech-tag`、`.value-tag`、`.card-tech-tags` 样式规则
+
+### 待完成（Chunk 3）
+- 来源可用性监控与回退机制（更完善的来源失败处理）
 
 ## 6. 后续改进计划
 
@@ -310,13 +406,13 @@
 - 去掉过长或广告味很重的标题
 - 去掉摘要中的奇怪转义字符
 - 避免重复主题文章同时进入前 10
-- 增加“优先展示当天新闻”的排序权重
+- 增加"优先展示当天新闻"的排序权重
 
 ---
 
 ### P2（中期优化）
 
-#### 7）引入更明确的“精选”排序机制
+#### 7）引入更明确的"精选"排序机制
 目前更多是抓取 + 去重 + 排序的结果，后续可以增加更明确的精选逻辑：
 - 新鲜度
 - 来源质量
@@ -324,7 +420,7 @@
 - 是否有真实落地案例
 - 是否是大厂 / 大模型 / 开发工具 / 多智能体关键更新
 
-这样“10 篇精选”会更像真正的编辑精选，而不只是抓到的 10 条。
+这样"10 篇精选"会更像真正的编辑精选，而不只是抓到的 10 条。
 
 #### 8）增加回归测试
 可补充测试：
@@ -370,7 +466,7 @@
 
 ## 7. 一句话总结
 
-`ai-agent-weekly` 目前已经从“能跑的原型”进入到“可持续使用的自动资讯站点”阶段了：
+`ai-agent-weekly` 目前已经从"能跑的原型"进入到"可持续使用的自动资讯站点"阶段了：
 - 核心链路已经打通
 - 主要质量问题（标题污染、摘要污染、随机图片）已经被修到可接受水平
 - 现在最值得做的，不再是继续堆功能，而是 **收口规则、清理技术债、提高稳定性和可维护性**。

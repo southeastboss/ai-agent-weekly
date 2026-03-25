@@ -20,11 +20,13 @@ const $ = cheerio.load(html);
 
 const featuredCards = $('.featured-card').length;
 const articleCards = $('.article-card').length;
+const sectionBlocks = $('.section-block').length;
 const totalCards = featuredCards + articleCards;
 const linkedTitles = $('.featured-card .card-title a, .article-card .card-title a').length;
 
-if (featuredCards < 1) {
-  fail('Expected at least 1 featured card');
+// Accept either a featured card OR section blocks as valid content structure
+if (featuredCards < 1 && sectionBlocks < 1) {
+  fail('Expected at least 1 featured card or 1 section block');
 }
 
 if (articleCards < 9) {
@@ -39,4 +41,4 @@ if (linkedTitles < totalCards) {
   fail(`Expected at least ${totalCards} linked titles, got ${linkedTitles}`);
 }
 
-console.log(`✅ Smoke check passed: ${featuredCards} featured, ${articleCards} articles, ${linkedTitles} linked titles`);
+console.log(`✅ Smoke check passed: ${featuredCards} featured, ${sectionBlocks} sections, ${articleCards} articles, ${linkedTitles} linked titles`);
