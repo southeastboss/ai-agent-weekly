@@ -643,26 +643,49 @@ function extractArticles($, source, rssText) {
  * 抓取所有来源
  */
 /**
- * 使用 MiniMax AI 生成文章摘要（中文，一句话概括）
+ * 使用 MiniMax AI 生成中文摘要（100-200 字）
  */
-function buildSummary(description) {
-  const cleaned = (description || '').replace(/\s+/g, ' ').trim();
-  if (!cleaned) return '';
-  if (cleaned.length <= 200) return cleaned;
-  return cleaned.substring(0, 200).trim();
-}
-
 async function generateSummary(article) {
   if (!article.title || !article.description) return article;
 
-  const prompt = `一句话概括这段新闻（限50字内）：${article.title}。${article.description.substring(0, 200)}`;
+  const text = `${article.title}。${article.description}`.substring(0, 500);
+  const prompt = `请用中文为这篇新闻写一段简短的摘要，要求：
+1. 字数控制在 100 到 200 字之间
+2. 提取文章的核心内容和价值
+3. 语言简洁专业
+新闻内容：${text}`;
 
-  // 直接使用原文描述作为摘要，优先保留 100~200 字的信息量；超过 200 字再截断
-  const summary = buildSummary(article.description);
-  if (summary) {
-    return { ...article, summary };
+  try {
+    const response = await fetch('https://api.minimax.chat/v1/text/chatcompletion_v2', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.MINIMAX_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: 'MiniMax-Text-01',
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 300,
+      }),
+      signal: AbortSignal.timeout(15000),
+    });
+
+    if (!response.ok) throw new Error(`MiniMax API error: ${response.status}`);
+
+    const data = await response.json();
+    const content = data?.choices?.[0]?.message?.content;
+    if (content) {
+      const summary = content.trim().substring(0, 200);
+      return { ...article, summary };
+    }
+  } catch (err) {
+    console.warn(`   ⚠️ AI 摘要生成失败，使用截断摘要: ${err.message}`);
   }
-  return article;
+
+  // Fallback：纯截断
+  const cleaned = (article.description || '').replace(/\s+/g, ' ').trim();
+  const summary = cleaned ? cleaned.substring(0, 200).trim() : '';
+  return summary ? { ...article, summary } : article;
 }
 
 // 翻译功能已移除
@@ -1477,7 +1500,6 @@ if (require.main === module) {
 }
 
 module.exports = {
-  buildSummary,
   generateSummary,
   filterArticles,
   scoreArticle,
