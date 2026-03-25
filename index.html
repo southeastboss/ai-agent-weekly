@@ -174,6 +174,20 @@
             letter-spacing: 0.3px; color: white;
             margin-bottom: 0.75rem; width: fit-content;
         }
+        .article-card .tech-tag {
+            display: inline-block; padding: 0.15rem 0.5rem; border-radius: 50px;
+            font-size: 0.65rem; font-weight: 600;
+            letter-spacing: 0.2px; margin-right: 0.25rem;
+        }
+        .article-card .value-tag {
+            display: inline-block; padding: 0.15rem 0.5rem; border-radius: 50px;
+            font-size: 0.65rem; font-weight: 600;
+            letter-spacing: 0.2px;
+        }
+        .article-card .card-tech-tags {
+            display: flex; flex-wrap: wrap; gap: 0.25rem;
+            margin-top: 0.4rem; margin-bottom: 0.2rem;
+        }
         .article-card .card-title {
             font-size: 1.1rem; font-weight: 600;
             margin-bottom: 0.6rem; line-height: 1.45;
@@ -202,12 +216,7 @@
             border-top: 1px solid var(--border);
             transition: border-color 0.4s ease;
         }
-        .article-card .card-source { display: flex; align-items: center; gap: 0.5rem; color: var(--text-muted); font-size: 0.8rem; }
-        .article-card .card-source .icon {
-            width: 20px; height: 20px; border-radius: 5px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 10px; color: white; font-weight: 700;
-        }
+        .article-card .card-extra-meta { display: flex; align-items: center; gap: 0.5rem; color: var(--text-muted); font-size: 0.8rem; flex-wrap: wrap; }
         .article-card .card-date { color: var(--text-muted); font-size: 0.78rem; }
         .featured-card {
             background: var(--card-bg); border: 1px solid var(--border);
@@ -252,12 +261,6 @@
             padding: 0.6rem 1rem; border-radius: 6px;
         }
         .featured-card .card-footer { display: flex; align-items: center; justify-content: space-between; }
-        .featured-card .card-source { display: flex; align-items: center; gap: 0.5rem; color: var(--text-muted); font-size: 0.82rem; }
-        .featured-card .card-source .icon {
-            width: 22px; height: 22px; border-radius: 6px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 11px; color: white; font-weight: 700;
-        }
         .read-btn {
             display: inline-flex; align-items: center; gap: 0.4rem;
             padding: 0.5rem 1.2rem; border-radius: 50px;
@@ -266,8 +269,6 @@
             text-decoration: none; transition: all 0.3s ease;
         }
         .read-btn:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(99,102,241,0.4); }
-        .source-note { text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.82rem; border-top: 1px solid var(--border); margin-top: 2.5rem; transition: border-color 0.4s ease; }
-        .source-note a { color: var(--primary); text-decoration: none; }
         footer { text-align: center; padding: 2rem; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 0.8rem; transition: border-color 0.4s ease; }
         footer a { color: var(--primary); text-decoration: none; }
         .progress-bar { position: fixed; top: 64px; left: 0; height: 3px; background: var(--gradient-1); z-index: 999; transition: width 0.1s; }
@@ -279,6 +280,38 @@
         ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
         @keyframes fadeInRight { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: translateX(0); } }
         .article-card { animation: fadeInRight 0.4s ease forwards; }
+        /* ── 三分区结构 ─────────────────────────────────────── */
+        .section-block {
+            margin-bottom: 3rem;
+        }
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 1.2rem;
+            padding-bottom: 0.6rem;
+            border-bottom: 2px solid var(--border);
+            transition: color 0.4s ease, border-color 0.4s ease;
+        }
+        .section-title .section-icon {
+            font-size: 1.2rem;
+        }
+        .section-title .section-count {
+            margin-left: auto;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: var(--primary);
+            color: white;
+            padding: 0.15rem 0.55rem;
+            border-radius: 50px;
+        }
+        .section-block:nth-child(1) .section-title { border-bottom-color: #6366f1; }
+        .section-block:nth-child(2) .section-title { border-bottom-color: #f59e0b; }
+        .section-block:nth-child(3) .section-title { border-bottom-color: #10b981; }
+
         @media (max-width: 768px) {
             .featured-card { flex-direction: column; }
             .featured-card .card-thumb { width: 100%; min-height: 200px; }
@@ -287,6 +320,7 @@
             .hero h1 { font-size: 2rem; }
             .hero-stats { gap: 1.5rem; }
             .hero-stats .stat-num { font-size: 1.4rem; }
+            .section-title { font-size: 1rem; }
         }
     </style>
 </head>
@@ -310,11 +344,11 @@
     <section class="hero">
         <div class="hero-inner">
             <div class="pill">🧠 专注 · AI Agent 前沿</div>
-            <h1>AI Agent 本周动态</h1>
+            <h1>AI 技术情报站</h1>
             <p>追踪 AI Agent、具身智能、多智能体系统的最新进展与行业应用</p>
             <div class="hero-stats">
                 <div class="stat-item">
-                    <div class="stat-num">10</div>
+                    <div class="stat-num">15</div>
                     <div class="stat-label">篇精选文章</div>
                 </div>
                 <div class="stat-item">
@@ -322,7 +356,7 @@
                     <div class="stat-label">更新日期</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-num">09:58</div>
+                    <div class="stat-num">11:15</div>
                     <div class="stat-label">更新时间</div>
                 </div>
             </div>
@@ -331,214 +365,320 @@
 
     <main>
         
-    <div class="featured-card" data-category="agent">
+    <section class="section-block" data-section="open-source">
+      <h2 class="section-title">
+        <span class="section-icon">🛠️</span>
+        开源项目
+        <span class="section-count">5</span>
+      </h2>
+      <div class="article-list">
+        
+    <div class="article-card" data-category="open-source">
       <div class="card-thumb">
-        <img src="https://techcrunch.com/wp-content/uploads/2019/05/GettyImages-1058015746.jpg?resize=1200,800" alt="With $3.5B in fresh capital, Kleiner Perkins is going all in on AI" loading="lazy">
-        <div class="overlay" style="position:absolute;inset:0;background:linear-gradient(to right,rgba(0,0,0,0.3),transparent)"></div>
+        <img src="https://opengraph.githubassets.com/665722b6f3f760f03165cf9d6fb832a702f74d65d9811784a2ea666d5e68900b/affaan-m/everything-claude-code" alt="GitHub - affaan-m/everything-claude-code: The agent harness performance optimization system. Skills, instincts, memory, security, and research-first development for Claude Code, Codex, Opencode, Cursor and beyond." loading="lazy">
       </div>
       <div class="card-content">
-        <div class="featured-label">⭐ 重点关注</div>
-        <h2 class="card-title">
-          <a href="https://techcrunch.com/2026/03/24/with-3-5b-in-fresh-capital-kleiner-perkins-is-going-all-in-on-ai/" target="_blank">With $3.5B in fresh capital, Kleiner Perkins is going all in on AI</a>
-        </h2>
-        <p class="card-summary">此次融资包括$ 10亿用于投资早期创业公司，以及$ 25亿用于后期成长型企业。</p>
-        <div class="card-footer">
-          <div class="card-source">
-            <span class="icon" style="background:linear-gradient(135deg">W</span>
-            artificialintelligence-news.com · 2026-03-25
-          </div>
-          <a href="https://techcrunch.com/2026/03/24/with-3-5b-in-fresh-capital-kleiner-perkins-is-going-all-in-on-ai/" target="_blank" class="read-btn">阅读原文 →</a>
+        <span class="card-tag" style="background:linear-gradient(135deg, #10b981, #059669)">开源</span>
+        <span class="value-tag" style="background:#fef3c7;color:#92400e;margin-left:0.3rem">热门项目</span>
+        <h3 class="card-title">
+          <a href="https://github.com/affaan-m/everything-claude-code" target="_blank">GitHub - affaan-m/everything-claude-code: The agent harness performance optimization system. Skills, instincts, memory, security, and research-first development for Claude Code, Codex, Opencode, Cursor and beyond.</a>
+        </h3>
+        <p class="card-summary">座席线束性能优化系统。Claude Code、Codex、Opencode、Cursor及其他方面的技能、本能、记忆、安全和研究优先开发。- affaan-m/everything-cla...</p>
+        <div class="card-tech-tags"><span class="tech-tag" style="background:#e0e7ff;color:#4338ca">LLM</span><span class="tech-tag" style="background:#ede9fe;color:#7c3aed">Agent</span><span class="tech-tag" style="background:#fef3c7;color:#b45309">CodeGen</span></div>
+        <div class="card-meta">
+          <div class="card-extra-meta"><span class="gh-stars">⭐ 105252</span><span class="gh-lang">• JavaScript</span></div>
+          <span class="card-date">2026-03-25</span>
         </div>
       </div>
     </div>
 
-        <div class="article-list" id="articleList">
-            
-    <div class="article-card" data-category="agent">
+    <div class="article-card" data-category="open-source">
       <div class="card-thumb">
-        <img src="https://www.artificialintelligence-news.com/wp-content/uploads/2026/03/multimodal-ai-finance-workflows-financial-automation-artificial-intelligence-enterprise-work.jpg" alt="Automating complex finance workflows with multimodal AI" loading="lazy">
+        <img src="https://repository-images.githubusercontent.com/54346799/e5ee272c-dfe1-40e5-b66b-b0a36e815254" alt="GitHub - public-apis/public-apis: A collective list of free APIs" loading="lazy">
       </div>
       <div class="card-content">
-        <span class="card-tag" style="background:linear-gradient(135deg, #6366f1, #8b5cf6)">多智能体</span>
+        <span class="card-tag" style="background:linear-gradient(135deg, #10b981, #059669)">开源</span>
+        <span class="value-tag" style="background:#fef3c7;color:#92400e;margin-left:0.3rem">热门项目</span>
         <h3 class="card-title">
-          <a href="https://www.artificialintelligence-news.com/news/automating-complex-finance-workflows-with-multimodal-ai/" target="_blank">Automating complex finance workflows with multimodal AI</a>
+          <a href="https://github.com/public-apis/public-apis" target="_blank">GitHub - public-apis/public-apis: A collective list of free APIs</a>
         </h3>
-        <p class="card-summary">财务领导者正在通过积极采用强大的新型多模态人工智能框架来实现复杂工作流程的自动化。</p>
+        <p class="card-summary">免费API的集体列表。通过在GitHub上创建帐户为public-apis/public-apis开发做出贡献。</p>
+        <div class="card-tech-tags"><span class="tech-tag" style="background:#d1fae5;color:#065f46">OpenSource</span></div>
         <div class="card-meta">
-          <div class="card-source">
-            <span class="icon" style="background:linear-gradient(135deg">A</span>
-            artificialintelligence-news.com
-          </div>
+          <div class="card-extra-meta"><span class="gh-stars">⭐ 415761</span><span class="gh-lang">• Python</span></div>
+          <span class="card-date">2026-03-25</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="article-card" data-category="open-source">
+      <div class="card-thumb">
+        <img src="https://opengraph.githubassets.com/10abb2b725cbda2ac3b6205e6353854cf27ec664b5840e98af4cb4ec67ec900e/ryanmcdermott/clean-code-javascript" alt="GitHub - ryanmcdermott/clean-code-javascript: Clean Code concepts adapted for JavaScript" loading="lazy">
+      </div>
+      <div class="card-content">
+        <span class="card-tag" style="background:linear-gradient(135deg, #10b981, #059669)">开源</span>
+        <span class="value-tag" style="background:#fef3c7;color:#92400e;margin-left:0.3rem">热门项目</span>
+        <h3 class="card-title">
+          <a href="https://github.com/ryanmcdermott/clean-code-javascript" target="_blank">GitHub - ryanmcdermott/clean-code-javascript: Clean Code concepts adapted for JavaScript</a>
+        </h3>
+        <p class="card-summary">Clean Code concepts adapted for JavaScript. Contribute to ryanmcdermott/clean-code-javascript develo</p>
+        <div class="card-tech-tags"><span class="tech-tag" style="background:#d1fae5;color:#065f46">OpenSource</span></div>
+        <div class="card-meta">
+          <div class="card-extra-meta"><span class="gh-stars">⭐ 94338</span><span class="gh-lang">• JavaScript</span></div>
+          <span class="card-date">2026-03-25</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="article-card" data-category="open-source">
+      <div class="card-thumb">
+        <img src="https://repository-images.githubusercontent.com/969302809/aa138f0d-163b-4951-a89d-468747b05058" alt="GitHub - hesreallyhim/awesome-claude-code: A curated list of awesome skills, hooks, slash-commands, agent orchestrators, applications, and plugins for Claude Code by Anthropic" loading="lazy">
+      </div>
+      <div class="card-content">
+        <span class="card-tag" style="background:linear-gradient(135deg, #10b981, #059669)">开源</span>
+        <span class="value-tag" style="background:#fef3c7;color:#92400e;margin-left:0.3rem">热门项目</span>
+        <h3 class="card-title">
+          <a href="https://github.com/hesreallyhim/awesome-claude-code" target="_blank">GitHub - hesreallyhim/awesome-claude-code: A curated list of awesome skills, hooks, slash-commands, agent orchestrators, applications, and plugins for Claude Code by Anthropic</a>
+        </h3>
+        <p class="card-summary">Anthropic的Claude Code - hesreallyhim/awesome-claude-code的精选技能、钩子、斜杠命令、代理编排器、应用程序和插件列表</p>
+        <div class="card-tech-tags"><span class="tech-tag" style="background:#e0e7ff;color:#4338ca">LLM</span><span class="tech-tag" style="background:#ede9fe;color:#7c3aed">Agent</span><span class="tech-tag" style="background:#d1fae5;color:#065f46">OpenSource</span></div>
+        <div class="card-meta">
+          <div class="card-extra-meta"><span class="gh-stars">⭐ 31961</span><span class="gh-lang">• Python</span></div>
+          <span class="card-date">2026-03-25</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="article-card" data-category="open-source">
+      <div class="card-thumb">
+        <img src="https://opengraph.githubassets.com/17c8a09790f34b968860497543f80bf7607a43b1dd40bf9c40d16bad286fa855/bytedance/deer-flow" alt="GitHub - bytedance/deer-flow: An open-source SuperAgent harness that researches, codes, and creates. With the help of sandboxes, memories, tools, skill, subagents and message gateway, it handles different levels of tasks that could take minutes to hours." loading="lazy">
+      </div>
+      <div class="card-content">
+        <span class="card-tag" style="background:linear-gradient(135deg, #10b981, #059669)">开源</span>
+        <span class="value-tag" style="background:#fef3c7;color:#92400e;margin-left:0.3rem">热门项目</span>
+        <h3 class="card-title">
+          <a href="https://github.com/bytedance/deer-flow" target="_blank">GitHub - bytedance/deer-flow: An open-source SuperAgent harness that researches, codes, and creates. With the help of sandboxes, memories, tools, skill, subagents and message gateway, it handles different levels of tasks that could take minutes to hours.</a>
+        </h3>
+        <p class="card-summary">研究、编码和创建的开源SuperAgent线束。借助沙箱、内存、工具、技能、子代理和消息网关，它可以处理不同级别的任务，这些任务包括：</p>
+        <div class="card-tech-tags"><span class="tech-tag" style="background:#ede9fe;color:#7c3aed">Agent</span><span class="tech-tag" style="background:#dcfce7;color:#15803d">RAG</span><span class="tech-tag" style="background:#d1fae5;color:#065f46">OpenSource</span></div>
+        <div class="card-meta">
+          <div class="card-extra-meta"><span class="gh-stars">⭐ 43776</span><span class="gh-lang">• Python</span></div>
+          <span class="card-date">2026-03-25</span>
+        </div>
+      </div>
+    </div>
+      </div>
+    </section>
+
+    <section class="section-block" data-section="vendor">
+      <h2 class="section-title">
+        <span class="section-icon">🏢</span>
+        厂商动态
+        <span class="section-count">5</span>
+      </h2>
+      <div class="article-list">
+        
+    <div class="article-card" data-category="vendor">
+      <div class="card-thumb">
+        <img src="https://images.ctfassets.net/kftzwdyauwt9/54zHAGljzaGUAL8FNoSXAV/a2dda4a62fccf740c4717bf1afac17eb/Shopping-SEO-1200x630.png?w=1600&h=900&fit=fill" alt="Powering Product Discovery in ChatGPT" loading="lazy">
+      </div>
+      <div class="card-content">
+        <span class="card-tag" style="background:linear-gradient(135deg, #8b5cf6, #c026d3)">OpenAI</span>
+        <span class="value-tag" style="background:#dbeafe;color:#1e40af;margin-left:0.3rem">模型发布</span>
+        <h3 class="card-title">
+          <a href="https://openai.com/index/powering-product-discovery-in-chatgpt" target="_blank">Powering Product Discovery in ChatGPT</a>
+        </h3>
+        <p class="card-summary">ChatGPT introduces richer, visually immersive shopping powered by the Agentic Commerce Protocol, ena</p>
+        <div class="card-tech-tags"><span class="tech-tag" style="background:#e0e7ff;color:#4338ca">LLM</span><span class="tech-tag" style="background:#ede9fe;color:#7c3aed">Agent</span></div>
+        <div class="card-meta">
+          <div></div>
           <span class="card-date">2026-03-24</span>
         </div>
       </div>
     </div>
 
-    <div class="article-card" data-category="agent">
+    <div class="article-card" data-category="vendor">
       <div class="card-thumb">
-        <img src="https://www.artificialintelligence-news.com/wp-content/uploads/2026/03/quantum-resistant-ai-hero_x1440.webp" alt="Securing AI systems under today's and tomorrow's conditions" loading="lazy">
+        <img src="https://images.ctfassets.net/kftzwdyauwt9/7vlGVflhNZ61C1qlgDB6fZ/f3825d17562a63dffcf5bd0ac0522520/SEO_card.png?w=1600&h=900&fit=fill" alt="Helping developers build safer AI experiences for teens" loading="lazy">
       </div>
       <div class="card-content">
-        <span class="card-tag" style="background:linear-gradient(135deg, #6366f1, #8b5cf6)">Agent</span>
+        <span class="card-tag" style="background:linear-gradient(135deg, #8b5cf6, #c026d3)">OpenAI</span>
+        <span class="value-tag" style="background:#dbeafe;color:#1e40af;margin-left:0.3rem">模型发布</span>
         <h3 class="card-title">
-          <a href="https://www.artificialintelligence-news.com/news/quantum-resilient-ai-needs-migration-and-hardware-protected-data-enclaves/" target="_blank">Securing AI systems under today's and tomorrow's conditions</a>
+          <a href="https://openai.com/index/teen-safety-policies-gpt-oss-safeguard" target="_blank">Helping developers build safer AI experiences for teens</a>
         </h3>
-        <p class="card-summary">量子弹性人工智能管道是安全开发智能系统所必需的，这一过程可能需要多年才能完成。</p>
+        <p class="card-summary">OpenAI releases prompt-based teen safety policies for developers using gpt-oss-safeguard, helping mo</p>
+        <div class="card-tech-tags"><span class="tech-tag" style="background:#e0e7ff;color:#4338ca">LLM</span><span class="tech-tag" style="background:#fef9c3;color:#854d0e">Safety</span></div>
         <div class="card-meta">
-          <div class="card-source">
-            <span class="icon" style="background:linear-gradient(135deg">S</span>
-            artificialintelligence-news.com
-          </div>
+          <div></div>
           <span class="card-date">2026-03-24</span>
         </div>
       </div>
     </div>
 
-    <div class="article-card" data-category="agent">
+    <div class="article-card" data-category="vendor">
       <div class="card-thumb">
-        <img src="https://techcrunch.com/wp-content/uploads/2025/10/sora-app-GettyImages2238161095.jpg?w=1024" alt="OpenAI’s Sora was the creepiest app on your phone -- now it's shutting down" loading="lazy">
+        <img src="https://images.ctfassets.net/kftzwdyauwt9/3PSiVDH1PKd0544F7v5oOy/acba6baa055d87310e4665d76e83a269/oai_Rakuten_SEO.png?w=1600&h=900&fit=fill" alt="Rakuten fixes issues twice as fast with Codex" loading="lazy">
+      </div>
+      <div class="card-content">
+        <span class="card-tag" style="background:linear-gradient(135deg, #8b5cf6, #c026d3)">OpenAI</span>
+        <span class="value-tag" style="background:#ede9fe;color:#6d28d9;margin-left:0.3rem">商业动态</span>
+        <h3 class="card-title">
+          <a href="https://openai.com/index/rakuten" target="_blank">Rakuten fixes issues twice as fast with Codex</a>
+        </h3>
+        <p class="card-summary">Rakuten uses Codex, the coding agent from OpenAI, to ship software faster and safer, reducing MTTR 5</p>
+        <div class="card-tech-tags"><span class="tech-tag" style="background:#e0e7ff;color:#4338ca">LLM</span><span class="tech-tag" style="background:#ede9fe;color:#7c3aed">Agent</span><span class="tech-tag" style="background:#fef3c7;color:#b45309">CodeGen</span></div>
+        <div class="card-meta">
+          <div></div>
+          <span class="card-date">2026-03-11</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="article-card" data-category="vendor">
+      <div class="card-thumb">
+        <img src="https://images.ctfassets.net/kftzwdyauwt9/7vwwEVWeYVswN8KAIIRiAZ/3b21f7147ba40289879f844649d6897e/OAI_Designing_AI_agentsto_resist_prompt_injection_SEO_16x9.png?w=1600&h=900&fit=fill" alt="Designing AI agents to resist prompt injection" loading="lazy">
+      </div>
+      <div class="card-content">
+        <span class="card-tag" style="background:linear-gradient(135deg, #8b5cf6, #c026d3)">OpenAI</span>
+        <span class="value-tag" style="background:#dbeafe;color:#1e40af;margin-left:0.3rem">模型发布</span>
+        <h3 class="card-title">
+          <a href="https://openai.com/index/designing-agents-to-resist-prompt-injection" target="_blank">Designing AI agents to resist prompt injection</a>
+        </h3>
+        <p class="card-summary">How ChatGPT defends against prompt injection and social engineering by constraining risky actions an</p>
+        <div class="card-tech-tags"><span class="tech-tag" style="background:#e0e7ff;color:#4338ca">LLM</span><span class="tech-tag" style="background:#ede9fe;color:#7c3aed">Agent</span><span class="tech-tag" style="background:#fee2e2;color:#b91c1c">Finetuning</span></div>
+        <div class="card-meta">
+          <div></div>
+          <span class="card-date">2026-03-11</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="article-card" data-category="vendor">
+      <div class="card-thumb">
+        <img src="https://images.ctfassets.net/kftzwdyauwt9/7azghKvcTTwCO0cBFRf8yw/47c1807d65e36a654561ec2829f67cbe/japan-teen-safety-blueprint-seo.png?w=1600&h=900&fit=fill" alt="OpenAI Japan announces Japan Teen Safety Blueprint to put teen safety first" loading="lazy">
+      </div>
+      <div class="card-content">
+        <span class="card-tag" style="background:linear-gradient(135deg, #8b5cf6, #c026d3)">OpenAI</span>
+        <span class="value-tag" style="background:#ede9fe;color:#6d28d9;margin-left:0.3rem">商业动态</span>
+        <h3 class="card-title">
+          <a href="https://openai.com/index/japan-teen-safety-blueprint" target="_blank">OpenAI Japan announces Japan Teen Safety Blueprint to put teen safety first</a>
+        </h3>
+        <p class="card-summary">OpenAI Japan announces the Japan Teen Safety Blueprint, introducing stronger age protections, parent</p>
+        <div class="card-tech-tags"><span class="tech-tag" style="background:#e0e7ff;color:#4338ca">LLM</span><span class="tech-tag" style="background:#fef9c3;color:#854d0e">Safety</span></div>
+        <div class="card-meta">
+          <div></div>
+          <span class="card-date">2026-03-17</span>
+        </div>
+      </div>
+    </div>
+      </div>
+    </section>
+
+    <section class="section-block" data-section="frontier">
+      <h2 class="section-title">
+        <span class="section-icon">🔬</span>
+        前沿技术
+        <span class="section-count">5</span>
+      </h2>
+      <div class="article-list">
+        
+    <div class="article-card" data-category="frontier">
+      <div class="card-thumb">
+        <img src="https://techcrunch.com/wp-content/uploads/2025/02/GettyImages-2195918462.jpg?w=1024" alt="OpenAI adds open source tools to help developers build for teen safety" loading="lazy">
       </div>
       <div class="card-content">
         <span class="card-tag" style="background:linear-gradient(135deg, #6366f1, #8b5cf6)">AI</span>
+        <span class="value-tag" style="background:#f1f5f9;color:#334155;margin-left:0.3rem">前沿探索</span>
         <h3 class="card-title">
-          <a href="https://techcrunch.com/2026/03/24/openais-sora-was-the-creepiest-app-on-your-phone-now-its-shutting-down/" target="_blank">OpenAI’s Sora was the creepiest app on your phone -- now it's shutting down</a>
+          <a href="https://techcrunch.com/2026/03/24/openai-adds-open-source-tools-to-help-developers-build-for-teen-safety/" target="_blank">OpenAI adds open source tools to help developers build for teen safety</a>
         </h3>
-        <p class="card-summary">尽管基础的Sora 2视频和音频生成模型令人印象深刻，但人们对纯人工智能的社交Feed没有持续的兴趣。</p>
+        <p class="card-summary">开发人员可以使用这些策略来巩固他们所构建的内容，而不是从头开始研究如何为青少年提供更安全的人工智能。</p>
+        <div class="card-tech-tags"><span class="tech-tag" style="background:#e0e7ff;color:#4338ca">LLM</span><span class="tech-tag" style="background:#fef9c3;color:#854d0e">Safety</span><span class="tech-tag" style="background:#d1fae5;color:#065f46">OpenSource</span></div>
         <div class="card-meta">
-          <div class="card-source">
-            <span class="icon" style="background:linear-gradient(135deg">O</span>
-            artificialintelligence-news.com
-          </div>
+          <div></div>
           <span class="card-date">2026-03-24</span>
         </div>
       </div>
     </div>
 
-    <div class="article-card" data-category="agent">
+    <div class="article-card" data-category="frontier">
       <div class="card-thumb">
-        <img src="https://techcrunch.com/wp-content/uploads/2025/06/GettyImages-2217198328.jpeg?resize=1200,800" alt="Kentucky woman rejects $26M offer to turn her farm into a data center" loading="lazy">
+        <img src="https://techcrunch.com/wp-content/uploads/2025/05/Google-DeepMind.jpg?w=1024" alt="Agile Robots becomes the latest robotics company to partner with Google DeepMind" loading="lazy">
       </div>
       <div class="card-content">
         <span class="card-tag" style="background:linear-gradient(135deg, #6366f1, #8b5cf6)">AI</span>
+        <span class="value-tag" style="background:#ccfbf1;color:#115e59;margin-left:0.3rem">具身智能</span>
         <h3 class="card-title">
-          <a href="https://techcrunch.com/2026/03/24/kentucky-woman-rejects-26-million-offer-to-turn-her-farm-into-a-data-center/" target="_blank">Kentucky woman rejects $26M offer to turn her farm into a data center</a>
+          <a href="https://techcrunch.com/2026/03/24/agile-robots-becomes-the-latest-robotics-company-to-partner-with-google-deepmind/" target="_blank">Agile Robots becomes the latest robotics company to partner with Google DeepMind</a>
         </h3>
-        <p class="card-summary">据报道，一家“大型人工智能公司”向肯塔基州的一个家庭提供了2600万$ ，用于在他们的农场建造一个数据中心。</p>
+        <p class="card-summary">Agile Robots将把Google DeepMind的机器人基础模型整合到其机器人中，同时为人工智能研究实验室收集数据。</p>
+        <div class="card-tech-tags"><span class="tech-tag" style="background:#ccfbf1;color:#0f766e">Robotics</span><span class="tech-tag" style="background:#dbEafe;color:#1d4ed8">Research</span></div>
         <div class="card-meta">
-          <div class="card-source">
-            <span class="icon" style="background:linear-gradient(135deg">K</span>
-            artificialintelligence-news.com
-          </div>
+          <div></div>
           <span class="card-date">2026-03-24</span>
         </div>
       </div>
     </div>
 
-    <div class="article-card" data-category="agent">
+    <div class="article-card" data-category="frontier">
+      <div class="card-thumb">
+        <img src="https://cdn-thumbnails.huggingface.co/social-thumbnails/blog/nvidia/domain-specific-embedding-finetune.png" alt="Build a Domain-Specific Embedding Model in Under a Day" loading="lazy">
+      </div>
+      <div class="card-content">
+        <span class="card-tag" style="background:linear-gradient(135deg, #6366f1, #8b5cf6)">AI</span>
+        <span class="value-tag" style="background:#f1f5f9;color:#334155;margin-left:0.3rem">前沿探索</span>
+        <h3 class="card-title">
+          <a href="https://huggingface.co/blog/nvidia/domain-specific-embedding-finetune" target="_blank">Build a Domain-Specific Embedding Model in Under a Day</a>
+        </h3>
+        <p class="card-summary">NVIDIA关于Hugging Face的博客文章</p>
+        <div class="card-tech-tags"><span class="tech-tag" style="background:#dcfce7;color:#15803d">RAG</span><span class="tech-tag" style="background:#e0f2fe;color:#0369a1">Embedding</span></div>
+        <div class="card-meta">
+          <div></div>
+          <span class="card-date">2026-03-20</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="article-card" data-category="frontier">
       <div class="card-thumb">
         <img src="https://techcrunch.com/wp-content/uploads/2026/01/anthropic-image-jagmeet-singh-techcrunch.jpg?resize=1200,800" alt="Anthropic hands Claude Code more control, but keeps it on a leash" loading="lazy">
       </div>
       <div class="card-content">
         <span class="card-tag" style="background:linear-gradient(135deg, #6366f1, #8b5cf6)">AI</span>
+        <span class="value-tag" style="background:#f1f5f9;color:#334155;margin-left:0.3rem">前沿探索</span>
         <h3 class="card-title">
           <a href="https://techcrunch.com/2026/03/24/anthropic-hands-claude-code-more-control-but-keeps-it-on-a-leash/" target="_blank">Anthropic hands Claude Code more control, but keeps it on a leash</a>
         </h3>
         <p class="card-summary">Anthropic针对Claude Code的新自动模式允许人工智能以更少的批准执行任务，这反映了更广泛地转向更自主的工具，这些工具通过内置的保障措施来平衡速度与安全。</p>
+        <div class="card-tech-tags"><span class="tech-tag" style="background:#e0e7ff;color:#4338ca">LLM</span></div>
         <div class="card-meta">
-          <div class="card-source">
-            <span class="icon" style="background:linear-gradient(135deg">A</span>
-            artificialintelligence-news.com
-          </div>
+          <div></div>
           <span class="card-date">2026-03-24</span>
         </div>
       </div>
     </div>
 
-    <div class="article-card" data-category="agent">
+    <div class="article-card" data-category="frontier">
       <div class="card-thumb">
-        <img src="https://techcrunch.com/wp-content/uploads/2026/02/spotify-logo-phone-GettyImages-2236404299.jpg?w=1024" alt="Spotify tests new tool to stop AI slop from being attributed to real artists" loading="lazy">
+        <img src="https://cdn-thumbnails.huggingface.co/social-thumbnails/blog/ServiceNow-AI/eva.png" alt="A New Framework for Evaluating Voice Agents (EVA)" loading="lazy">
       </div>
       <div class="card-content">
         <span class="card-tag" style="background:linear-gradient(135deg, #6366f1, #8b5cf6)">AI</span>
+        <span class="value-tag" style="background:#fef9c3;color:#78350f;margin-left:0.3rem">Agent 突破</span>
         <h3 class="card-title">
-          <a href="https://techcrunch.com/2026/03/24/spotify-tests-new-tool-to-stop-ai-slop-from-being-attributed-to-real-artists/" target="_blank">Spotify tests new tool to stop AI slop from being attributed to real artists</a>
+          <a href="https://huggingface.co/blog/ServiceNow-AI/eva" target="_blank">A New Framework for Evaluating Voice Agents (EVA)</a>
         </h3>
-        <p class="card-summary">新工具背后的想法是让艺术家能够更好地控制哪些曲目与他们在Spotify上的名字相关联。</p>
+        <p class="card-summary">ServiceNow-AI关于拥抱脸的博客文章</p>
+        <div class="card-tech-tags"><span class="tech-tag" style="background:#ede9fe;color:#7c3aed">Agent</span></div>
         <div class="card-meta">
-          <div class="card-source">
-            <span class="icon" style="background:linear-gradient(135deg">S</span>
-            artificialintelligence-news.com
-          </div>
+          <div></div>
           <span class="card-date">2026-03-24</span>
         </div>
       </div>
     </div>
-
-    <div class="article-card" data-category="agent">
-      <div class="card-thumb">
-        <img src="https://techcrunch.com/wp-content/uploads/2023/05/GettyImages-1177951659.jpg?resize=1200,800" alt="Databricks bought two startups to underpin its new AI security product" loading="lazy">
       </div>
-      <div class="card-content">
-        <span class="card-tag" style="background:linear-gradient(135deg, #6366f1, #8b5cf6)">AI</span>
-        <h3 class="card-title">
-          <a href="https://techcrunch.com/2026/03/24/databricks-buys-two-startups-lakewatch-antimatter-siftd-ai-security/" target="_blank">Databricks bought two startups to underpin its new AI security product</a>
-        </h3>
-        <p class="card-summary">Databricks最近筹集了50亿美元的$募集资金，收购了创业公司并寻求更多。它收购了Antimatter和SiftD.ai。</p>
-        <div class="card-meta">
-          <div class="card-source">
-            <span class="icon" style="background:linear-gradient(135deg">D</span>
-            artificialintelligence-news.com
-          </div>
-          <span class="card-date">2026-03-24</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="article-card" data-category="agent">
-      <div class="card-thumb">
-        <img src="https://techcrunch.com/wp-content/uploads/2018/08/GettyImages-576856756.jpg?resize=1200,840" alt="Arm is releasing the first in-house chip in its 35-year history" loading="lazy">
-      </div>
-      <div class="card-content">
-        <span class="card-tag" style="background:linear-gradient(135deg, #6366f1, #8b5cf6)">AI</span>
-        <h3 class="card-title">
-          <a href="https://techcrunch.com/2026/03/24/arm-is-releasing-its-first-in-house-chip-in-its-35-year-history/" target="_blank">Arm is releasing the first in-house chip in its 35-year history</a>
-        </h3>
-        <p class="card-summary">ARM首次生产自己的CPU。它使用Meta开发了CPU ， Meta也是该芯片的第一个客户。</p>
-        <div class="card-meta">
-          <div class="card-source">
-            <span class="icon" style="background:linear-gradient(135deg">A</span>
-            artificialintelligence-news.com
-          </div>
-          <span class="card-date">2026-03-24</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="article-card" data-category="agent">
-      <div class="card-thumb">
-        <img src="https://techcrunch.com/wp-content/uploads/2026/03/Screenshot-2026-03-24-at-9.15.10-AM.png?resize=1200,675" alt="OpenAI's plans to make ChatGPT more like Amazon aren't going so well" loading="lazy">
-      </div>
-      <div class="card-content">
-        <span class="card-tag" style="background:linear-gradient(135deg, #6366f1, #8b5cf6)">AI</span>
-        <h3 class="card-title">
-          <a href="https://techcrunch.com/2026/03/24/openais-plans-to-make-chatgpt-more-like-amazon-arent-going-so-well/" target="_blank">OpenAI's plans to make ChatGPT more like Amazon aren't going so well</a>
-        </h3>
-        <p class="card-summary">OpenAI表示，它正在摆脱即时结账，即时结账允许用户直接通过ChatGPT界面购买商品。</p>
-        <div class="card-meta">
-          <div class="card-source">
-            <span class="icon" style="background:linear-gradient(135deg">O</span>
-            artificialintelligence-news.com
-          </div>
-          <span class="card-date">2026-03-24</span>
-        </div>
-      </div>
-    </div>
-        </div>
-
-        <div class="source-note">
-            📡 数据来源：<a href="https://www.artificialintelligence-news.com/" target="_blank">artificialintelligence-news.com</a> · 
-            自动抓取 · 更新时间：2026.03.25 09:58
-        </div>
+    </section>
 
         <div id="emptyState" class="empty-state">
             <div class="empty-icon">🔍</div>
@@ -547,7 +687,7 @@
     </main>
 
     <footer>
-        <p>AI Agent 前沿动态 | 数据来源：artificialintelligence-news.com（每日自动更新）</p>
+        <p>AI Agent 前沿动态 | 每日自动更新</p>
     </footer>
 
     <script>
@@ -569,28 +709,36 @@
         function filterNews(category) {
             document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
             event.target.closest('.category-btn').classList.add('active');
-            const featured = document.getElementById('featured');
-            const list = document.getElementById('articleList');
+            const sections = document.querySelectorAll('.section-block');
             const emptyState = document.getElementById('emptyState');
-            if (featured) featured.style.display = (category === 'all') ? 'flex' : 'none';
-            const cards = list.querySelectorAll('.article-card');
             let visibleCount = 0;
-            cards.forEach((card, index) => {
-                const show = category === 'all' || card.dataset.category === category;
-                if (show) {
-                    visibleCount++;
-                    if (card.style.display === 'none') {
-                        card.style.display = 'flex';
-                        card.style.animation = 'none';
-                        card.offsetHeight;
-                        card.style.opacity = '0';
-                        card.style.transform = 'translateX(-12px)';
-                        requestAnimationFrame(() => {
-                            card.style.animation = 'fadeInRight 0.4s ease ' + (index * 0.05) + 's forwards';
-                        });
+            sections.forEach(section => {
+                const cards = section.querySelectorAll('.article-card');
+                const sectionTitle = section.querySelector('.section-title');
+                let sectionVisible = 0;
+                cards.forEach((card, index) => {
+                    const show = category === 'all' || card.dataset.category === category;
+                    if (show) {
+                        sectionVisible++;
+                        visibleCount++;
+                        if (card.style.display === 'none') {
+                            card.style.display = 'flex';
+                            card.style.animation = 'none';
+                            card.offsetHeight;
+                            card.style.opacity = '0';
+                            card.style.transform = 'translateX(-12px)';
+                            requestAnimationFrame(() => {
+                                card.style.animation = 'fadeInRight 0.4s ease ' + (index * 0.05) + 's forwards';
+                            });
+                        }
+                    } else {
+                        card.style.display = 'none';
                     }
-                } else {
-                    card.style.display = 'none';
+                });
+                section.style.display = sectionVisible > 0 ? 'block' : 'none';
+                if (sectionTitle) {
+                    const countEl = sectionTitle.querySelector('.section-count');
+                    if (countEl) countEl.textContent = sectionVisible;
                 }
             });
             emptyState.style.display = visibleCount === 0 ? 'block' : 'none';
