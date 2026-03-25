@@ -1574,6 +1574,7 @@ if (require.main === module) {
 }
 
 module.exports = {
+  generateArticleCard,
   generateSummary,
   finalizeArticlesForDisplay,
   filterArticles,
