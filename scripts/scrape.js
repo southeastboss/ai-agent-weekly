@@ -871,9 +871,10 @@ function generateArticleCard(article, isFeatured = false) {
     if (article.sourceCategory === 'vendor' && article.url) {
       try {
         const urlObj = new URL(article.url);
-        const localLogoPath = path.join(__dirname, '..', 'assets', 'vendor-logos', urlObj.hostname + '.png');
+        const logoName = urlObj.hostname.replace('www.', '').replace('.com', '');
+        const localLogoPath = path.join(__dirname, '..', 'assets', 'vendor-logos', logoName + '.png');
         if (fs.existsSync(localLogoPath)) {
-          imageUrl = `assets/vendor-logos/${urlObj.hostname}.png`;
+          imageUrl = `assets/vendor-logos/${logoName}.png`;
         } else {
           imageUrl = `https://img.logo.dev/${urlObj.hostname}.png?size=512`;
         }
