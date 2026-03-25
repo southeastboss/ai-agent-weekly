@@ -650,36 +650,18 @@ async function generateSummary(article) {
   if (!article.title || !article.description) return article;
 
   const text = `${article.title}。${article.description}`.substring(0, 500);
-  const prompt = `为以下内容写100-200字中文摘要：${text}`;
+  const scriptPath = path.join(__dirname, 'minimax_summary.py');
 
   try {
-    const response = await fetch('https://api.minimaxi.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.MINIMAX_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: 'MiniMax-M2.5-highspeed',
-        messages: [{ role: 'user', content: prompt }],
-        max_tokens: 300,
-      }),
-      signal: AbortSignal.timeout(15000),
+    const pythonExe = process.env.PYTHON_BIN || 'python';
+    const output = execFileSync(pythonExe, [scriptPath, text], {
+      env: { ...process.env },
+      timeout: 20000,
+      encoding: 'utf-8',
     });
 
-    if (!response.ok) throw new Error(`MiniMax API error: ${response.status}`);
-
-    const data = await response.json();
-    const content = data?.choices?.[0]?.message?.content;
-    if (content) {
-      // 去掉开头 prompt 残留，取"中文摘要："或"内容："之后的内容
-      let summary = content.trim();
-      summary = summary.replace(/^为以下内容[写提].*?[:：]\s*/, '');
-      summary = summary.replace(/^请[你您]写.*?[:：]\s*/, '');
-      summary = summary.replace(/^用户要求我.*?[，。]\s*/, '');
-      summary = summary.trim().substring(0, 200);
-      if (summary) return { ...article, summary };
-    }
+    const summary = output.trim().substring(0, 200);
+    if (summary) return { ...article, summary };
   } catch (err) {
     console.warn(`   ⚠️ AI 摘要生成失败，使用截断摘要: ${err.message}`);
   }
