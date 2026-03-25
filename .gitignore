@@ -28,6 +28,13 @@ npm-debug.log*
 tmp/
 temp/
 *.tmp
+debug*.txt
+result.txt
+scripts/raw_out.txt
+
+# Python 缓存
+__pycache__/
+*.pyc
 
 # Git worktrees
 .worktrees/

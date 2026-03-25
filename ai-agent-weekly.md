@@ -216,6 +216,10 @@
 
 这些文件在调试阶段有价值，但长期会让仓库显得杂乱。
 
+补充处理（2026-03-25）：
+- 已清理一批未纳入正式流程的临时调试文件与输出产物（如 `debug*.txt`、`result.txt`、`scripts/raw_out.txt`、若干一次性 MiniMax 调试脚本）
+- 已补充 `.gitignore`，忽略 Python `__pycache__/`、`*.pyc` 以及常见调试输出，避免后续再次混入仓库
+
 建议后续：
 - 清理临时脚本
 - 或统一迁移到 `scripts/debug/` / `scripts/experiments/`
