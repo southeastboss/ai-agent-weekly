@@ -886,10 +886,10 @@ function generateArticleCard(article, isFeatured = false) {
       if (!imageUrl) {
         const pngPath = path.join(__dirname, '..', 'assets', 'vendor-logos', logoName + '.png');
         const svgPath = path.join(__dirname, '..', 'assets', 'vendor-logos', logoName + '.svg');
-        if (fs.existsSync(pngPath)) {
-          imageUrl = `assets/vendor-logos/${logoName}.png`;
-        } else if (fs.existsSync(svgPath)) {
+        if (fs.existsSync(svgPath)) {
           imageUrl = `assets/vendor-logos/${logoName}.svg`;
+        } else if (fs.existsSync(pngPath)) {
+          imageUrl = `assets/vendor-logos/${logoName}.png`;
         } else {
           imageUrl = `https://img.logo.dev/${urlObj.hostname}.png?size=512`;
         }

@@ -38,7 +38,7 @@ test('vendor article keeps og image and falls back to vendor logo', () => {
   assert.match(html, /onerror="this\.src='https:\/\/openai\.com\/content\/images\/logos\/openai-glyph-logo\.svg';this\.onerror=null"/);
 });
 
-test('vendor article without image uses vendor logo as primary image', () => {
+test('vendor article without image prefers svg vendor logo as primary image when available', () => {
   assert.equal(typeof generateArticleCard, 'function');
 
   const html = generateArticleCard({
@@ -52,6 +52,6 @@ test('vendor article without image uses vendor logo as primary image', () => {
     tag: 'OpenAI',
   });
 
-  assert.match(html, /src="assets\/vendor-logos\/openai\.png"|src="assets\/vendor-logos\/openai\.svg"|src="https:\/\/img\.logo\.dev\/openai\.com\.png\?size=512"/);
+  assert.match(html, /src="assets\/vendor-logos\/openai\.svg"/);
   assert.match(html, /onerror="this\.src='https:\/\/openai\.com\/content\/images\/logos\/openai-glyph-logo\.svg';this\.onerror=null"/);
 });
