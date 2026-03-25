@@ -858,8 +858,13 @@ async function scrapeAllSources() {
  * 生成文章卡片 HTML
  */
 function generateArticleCard(article, isFeatured = false) {
-  const imageIndex = Math.abs(article.title.hashCode()) % 10;
-  const imageUrl = article.image || `https://picsum.photos/seed/${imageIndex}/800/400`;
+  // 无图片时使用 AI 主题背景图（按分区选用不同的 neural-network / AI 视觉图）
+  const sectionFallbacks = {
+    'open-source': 'https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=800&h=400&fit=crop&q=80',
+    'vendor':      'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&h=400&fit=crop&q=80',
+    'frontier':    'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=800&h=400&fit=crop&q=80',
+  };
+  const imageUrl = article.image || sectionFallbacks[article.sourceCategory] || 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&h=400&fit=crop&q=80';
 
   const tagMap = {
     'tag-agent': { bg: 'linear-gradient(135deg, #6366f1, #8b5cf6)', label: article.tag || 'Agent' },
