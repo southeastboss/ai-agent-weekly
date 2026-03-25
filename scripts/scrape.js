@@ -656,7 +656,7 @@ async function generateSummary(article) {
     const pythonExe = process.env.PYTHON_BIN || 'python';
     const output = execFileSync(pythonExe, [scriptPath, text], {
       env: { ...process.env },
-      timeout: 20000,
+      timeout: 180000,
       encoding: 'utf-8',
     });
 
@@ -670,6 +670,33 @@ async function generateSummary(article) {
   const cleaned = (article.description || '').replace(/\s+/g, ' ').trim();
   const summary = cleaned ? cleaned.substring(0, 200).trim() : '';
   return summary ? { ...article, summary } : article;
+}
+
+async function finalizeArticlesForDisplay(articles, summarizer = generateSummary) {
+  const sorted = [...articles].sort((a, b) => {
+    const dateA = new Date(a.date || '1970-01-01');
+    const dateB = new Date(b.date || '1970-01-01');
+    return dateB - dateA;
+  });
+
+  const filtered = filterArticles(sorted);
+  console.log(`\n🧹 质量过滤后剩余 ${filtered.length} 篇`);
+
+  for (const article of filtered) {
+    article.techTags = inferTechTags(article);
+    article.valueTag = inferValueTag(article, article.sourceCategory);
+  }
+
+  const sectionedArticles = assignArticlesToSections(filtered);
+  const displayedArticles = sectionedArticles.slice(0, CONFIG.maxArticles);
+
+  console.log(`\n🤖 仅为最终展示的 ${displayedArticles.length} 篇文章生成 AI 摘要...`);
+  const summarizedArticles = [];
+  for (const article of displayedArticles) {
+    summarizedArticles.push(await summarizer(article));
+  }
+
+  return summarizedArticles;
 }
 
 // 翻译功能已移除
@@ -799,34 +826,10 @@ async function scrapeAllSources() {
   if (pendingEnrichments.length > 0) {
     console.log(`\n🔄 并发补全 ${pendingEnrichments.length} 篇文章详情...`);
     const results = await Promise.all(pendingEnrichments);
-
-    // 使用 MiniMax AI 生成中文摘要（并发）
-    console.log(`\n🤖 并发生成 AI 摘要...`);
-    const summaryPromises = results.map(article => generateSummary(article));
-    const summarized = await Promise.all(summaryPromises);
-    allArticles.push(...summarized);
+    allArticles.push(...results);
   }
 
-  allArticles.sort((a, b) => {
-    const dateA = new Date(a.date || '1970-01-01');
-    const dateB = new Date(b.date || '1970-01-01');
-    return dateB - dateA;
-  });
-
-  // ── Chunk 3: 质量过滤 ────────────────────────────────────────────
-  const filtered = filterArticles(allArticles);
-  console.log(`\n🧹 质量过滤后剩余 ${filtered.length} 篇`);
-
-  // ── Chunk 3: 填充 techTags 和 valueTag ───────────────────────────
-  for (const article of filtered) {
-    article.techTags = inferTechTags(article);
-    article.valueTag = inferValueTag(article, article.sourceCategory);
-  }
-
-  // ── Chunk 3: 按分区评分分配（替换 naive sequential slicing）───────
-  const sectionedArticles = assignArticlesToSections(filtered);
-
-  return sectionedArticles.slice(0, CONFIG.maxArticles);
+  return finalizeArticlesForDisplay(allArticles);
 }
 
 /**
@@ -1485,6 +1488,7 @@ if (require.main === module) {
 
 module.exports = {
   generateSummary,
+  finalizeArticlesForDisplay,
   filterArticles,
   scoreArticle,
   inferTechTags,
