@@ -35,21 +35,6 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Download vendor logos
-        run: |
-          mkdir -p assets/vendor-logos
-          # Google logo (already committed, redownload for safety)
-          curl -sL --max-time 30 "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png" -o assets/vendor-logos/google.png
-          # OpenAI logo from GitHub raw
-          curl -sL --max-time 30 "https://raw.githubusercontent.com/openai/whisper/main/openai-logo.svg" -o assets/vendor-logos/openai.png || \
-          curl -sL --max-time 30 "https://cdn.openai.com/logo/logo-mark.png" -o assets/vendor-logos/openai.png || \
-          curl -sL --max-time 30 "https://www.google.com/s2/favicons?domain=openai.com&sz=512" -o assets/vendor-logos/openai.png
-          # Anthropic logo
-          curl -sL --max-time 30 "https://platform.claude.com/docs/images/anthropic-logo.png" -o assets/vendor-logos/anthropic.png || \
-          curl -sL --max-time 30 "https://www.google.com/s2/favicons?domain=anthropic.com&sz=512" -o assets/vendor-logos/anthropic.png
-          echo "Downloaded logos:"
-          ls -lh assets/vendor-logos/
-
       - name: Install dependencies
         run: npm ci
 

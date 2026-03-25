@@ -872,9 +872,12 @@ function generateArticleCard(article, isFeatured = false) {
       try {
         const urlObj = new URL(article.url);
         const logoName = urlObj.hostname.replace('www.', '').replace('.com', '');
-        const localLogoPath = path.join(__dirname, '..', 'assets', 'vendor-logos', logoName + '.png');
-        if (fs.existsSync(localLogoPath)) {
+        const pngPath = path.join(__dirname, '..', 'assets', 'vendor-logos', logoName + '.png');
+        const svgPath = path.join(__dirname, '..', 'assets', 'vendor-logos', logoName + '.svg');
+        if (fs.existsSync(pngPath)) {
           imageUrl = `assets/vendor-logos/${logoName}.png`;
+        } else if (fs.existsSync(svgPath)) {
+          imageUrl = `assets/vendor-logos/${logoName}.svg`;
         } else {
           imageUrl = `https://img.logo.dev/${urlObj.hostname}.png?size=512`;
         }
