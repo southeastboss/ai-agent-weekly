@@ -1,6 +1,6 @@
 # AI Agent 前沿动态 — 部署方案
 
-> 让 AI 每周自动抓取 AI Agent 前沿新闻，推送到 GitHub Pages
+> 让 AI 自动抓取 AI Agent 前沿新闻，推送到 GitHub Pages
 
 ---
 
@@ -11,7 +11,6 @@
 | 目标 | 每天自动更新 AI Agent 领域最新资讯 |
 | 展示 | 静态 HTML 网站，托管于 GitHub Pages |
 | 更新 | GitHub Actions 每日定时抓取，自动提交推送 |
-| 数据源 | artificialintelligence-news.com（AI Agent 相关分类） |
 
 ---
 
@@ -212,7 +211,7 @@ schedule:
 1. **数据源公开**：抓取的是公开网页，无法律风险
 2. **不存储敏感信息**：纯静态页面，无用户数据
 3. **GitHub Token**：Actions 用的是 GitHub 自动生成的 `GITHUB_TOKEN`，无需手动配置
-4. **恶意软件检测**：需确保被抓取的网站允许爬虫（artificialintelligence-news.com 为公开新闻网站）
+4. **恶意软件检测**：需确保被抓取的网站允许爬虫
 
 ---
 
@@ -237,10 +236,10 @@ A: 检查 GitHub Pages 设置中 source 是否指向正确的分支和目录
 
 ## 📈 未来扩展方向
 
-- [ ] 接入 AI 摘要功能（用 LLM 自动生成文章摘要）
+- [√] 接入 AI 摘要功能（用 LLM 自动生成文章摘要）
 - [ ] 添加搜索功能
 - [ ] 支持邮件订阅
-- [ ] 接入更多数据源（36kr、机器之心等）
+- [ ] 接入更多数据源
 - [ ] 添加评论区（用 Giscus/Disqus）
 - [ ] 支持 RSS 订阅
 - [ ] 添加阅读进度追踪
