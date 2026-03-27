@@ -76,12 +76,12 @@ const CONFIG = {
       //   tagClass: 'tag-vendor',
       //   isRss: true,
       // },
-      // Meta AI Blog
+      // AWS Machine Learning Blog
       {
-        name: 'Meta AI Blog',
-        url: 'https://ai.meta.com/blog/rss.xml/',
+        name: 'AWS ML Blog',
+        url: 'https://aws.amazon.com/blogs/machine-learning/feed/',
         sectionId: 'vendor',
-        tag: 'Meta',
+        tag: 'AWS',
         tagClass: 'tag-vendor',
         isRss: true,
       },
@@ -917,7 +917,7 @@ function generateArticleCard(article, isFeatured = false) {
       const KNOWN_LOGOS = {
         'openai.com':         'https://openai.com/content/images/logos/openai-glyph-logo.svg',
         'google.com':         'https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png',
-        'ai.meta.com': 'https://img.logo.dev/ai.meta.com.png?size=256',
+        'aws.amazon.com': 'https://img.logo.dev/aws.amazon.com.png?size=256',
       };
       vendorLogoUrl = KNOWN_LOGOS[urlObj.hostname] || null;
       if (!imageUrl) {
