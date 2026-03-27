@@ -391,14 +391,26 @@ function assignArticlesToSections(articles) {
 
     let selected;
     if (section.id === 'vendor') {
-      // 厂商分区：每个厂商最多 1 篇，确保多样性
+      // 厂商分区：先每个厂商最多 1 篇（确保多样性），不够时从剩余池子补
       const seenVendors = new Set();
       selected = [];
+      // 第一步：每个厂商最多 1 篇
       for (const article of pool) {
         if (!seenVendors.has(article._sourceName)) {
           seenVendors.add(article._sourceName);
           selected.push(article);
           if (selected.length >= section.quota) break;
+        }
+      }
+      // 第二步：还不够 quota？从剩余池子补（允许同厂商文章）
+      if (selected.length < section.quota) {
+        const selectedUrls = new Set(selected.map(a => a.url));
+        for (const article of pool) {
+          if (!selectedUrls.has(article.url)) {
+            selected.push(article);
+            selectedUrls.add(article.url);
+            if (selected.length >= section.quota) break;
+          }
         }
       }
       console.log(`   📊 分区 "${section.id}" 选取 ${selected.length} 篇（共${pool.length}条候选，来自 ${seenVendors.size} 个厂商）`);
