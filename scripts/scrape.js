@@ -67,15 +67,15 @@ const CONFIG = {
         tagClass: 'tag-vendor',
         isRss: true,
       },
-      // Anthropic 官方博客（已移除：RSS 端点返回 404）
-      // {
-      //   name: 'Anthropic Blog',
-      //   url: 'https://www.anthropic.com/blog/rss.xml',
-      //   sectionId: 'vendor',
-      //   tag: 'Anthropic',
-      //   tagClass: 'tag-vendor',
-      //   isRss: true,
-      // },
+      // Google AI Blog
+      {
+        name: 'Google AI Blog',
+        url: 'https://blog.google/technology/ai/rss/',
+        sectionId: 'vendor',
+        tag: 'Google',
+        tagClass: 'tag-vendor',
+        isRss: true,
+      },
       // AWS Machine Learning Blog
       {
         name: 'AWS ML Blog',
@@ -85,12 +85,21 @@ const CONFIG = {
         tagClass: 'tag-vendor',
         isRss: true,
       },
-      // Google AI Blog
+      // Meta Engineering Blog
       {
-        name: 'Google AI Blog',
-        url: 'https://blog.google/technology/ai/rss/',
+        name: 'Meta Engineering',
+        url: 'https://engineering.fb.com/feed/',
         sectionId: 'vendor',
-        tag: 'Google',
+        tag: 'Meta',
+        tagClass: 'tag-vendor',
+        isRss: true,
+      },
+      // Microsoft AI Blog（最后更新 2022-12，但 RSS 仍有效）
+      {
+        name: 'Microsoft AI Blog',
+        url: 'https://blogs.microsoft.com/ai/feed/',
+        sectionId: 'vendor',
+        tag: 'Microsoft',
         tagClass: 'tag-vendor',
         isRss: true,
       },
@@ -184,9 +193,11 @@ const SOURCE_QUALITY_WEIGHTS = {
   'GitHub Trending AI': 1.2,
   'GitHub Trending AI (JS)': 1.1,
   // 厂商分区（官方来源权重更高）
-
   'OpenAI Blog': 1.5,
   'Google AI Blog': 1.3,
+  'AWS ML Blog': 1.3,
+  'Meta Engineering': 1.2,
+  'Microsoft AI Blog': 1.0,
   // 前沿技术分区
   'Hugging Face Blog': 1.4,
   'VentureBeat AI': 1.1,
@@ -829,11 +840,23 @@ async function enrichArticle(article) {
 
 /**
  * 扁平化所有分区来源为一个统一数组，同时保留 sectionId
+ * 厂商分区每天随机选3个，增加多样性
  */
 function getAllSources() {
+  // 每天随机选3个厂商（洗牌后取前3个）
+  const vendorPool = [...CONFIG.sources.vendor];
+  // Fisher-Yates 洗牌
+  for (let i = vendorPool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [vendorPool[i], vendorPool[j]] = [vendorPool[j], vendorPool[i]];
+  }
+  const selectedVendors = vendorPool.slice(0, 3);
+  console.log(`\n🎲 今日随机选取的厂商: ${selectedVendors.map(v => v.name).join(' / ')}`);
+
   const allSources = [];
   for (const sectionId of Object.keys(CONFIG.sources)) {
-    for (const source of CONFIG.sources[sectionId]) {
+    const sources = sectionId === 'vendor' ? selectedVendors : CONFIG.sources[sectionId];
+    for (const source of sources) {
       allSources.push(source);
     }
   }
@@ -917,7 +940,8 @@ function generateArticleCard(article, isFeatured = false) {
       const KNOWN_LOGOS = {
         'openai.com':         'https://openai.com/content/images/logos/openai-glyph-logo.svg',
         'google.com':         'https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png',
-        'aws.amazon.com': 'https://img.logo.dev/aws.amazon.com.png?size=256',
+        'aws.amazon.com':     'https://img.logo.dev/aws.amazon.com.png?size=256',
+        'engineering.fb.com': 'https://img.logo.dev/engineering.fb.com.png?size=256',
       };
       vendorLogoUrl = KNOWN_LOGOS[urlObj.hostname] || null;
       if (!imageUrl) {
