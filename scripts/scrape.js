@@ -76,12 +76,12 @@ const CONFIG = {
       //   tagClass: 'tag-vendor',
       //   isRss: true,
       // },
-      // Microsoft AI Blog（新增）
+      // Meta AI Blog
       {
-        name: 'Microsoft AI Blog',
-        url: 'https://blogs.microsoft.com/ai/feed/',
+        name: 'Meta AI Blog',
+        url: 'https://ai.meta.com/blog/rss.xml/',
         sectionId: 'vendor',
-        tag: 'Microsoft',
+        tag: 'Meta',
         tagClass: 'tag-vendor',
         isRss: true,
       },
@@ -889,7 +889,7 @@ function generateArticleCard(article, isFeatured = false) {
       const KNOWN_LOGOS = {
         'openai.com':         'https://openai.com/content/images/logos/openai-glyph-logo.svg',
         'google.com':         'https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png',
-        'blogs.microsoft.com': 'https://img.logo.dev/blogs.microsoft.com.png?size=256',
+        'ai.meta.com': 'https://img.logo.dev/ai.meta.com.png?size=256',
       };
       vendorLogoUrl = KNOWN_LOGOS[urlObj.hostname] || null;
       if (!imageUrl) {
