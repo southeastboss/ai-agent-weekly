@@ -67,12 +67,21 @@ const CONFIG = {
         tagClass: 'tag-vendor',
         isRss: true,
       },
-      // Anthropic 官方博客
+      // Anthropic 官方博客（已移除：RSS 端点返回 404）
+      // {
+      //   name: 'Anthropic Blog',
+      //   url: 'https://www.anthropic.com/blog/rss.xml',
+      //   sectionId: 'vendor',
+      //   tag: 'Anthropic',
+      //   tagClass: 'tag-vendor',
+      //   isRss: true,
+      // },
+      // Microsoft AI Blog（新增）
       {
-        name: 'Anthropic Blog',
-        url: 'https://www.anthropic.com/blog/rss.xml',
+        name: 'Microsoft AI Blog',
+        url: 'https://blogs.microsoft.com/ai/feed/',
         sectionId: 'vendor',
-        tag: 'Anthropic',
+        tag: 'Microsoft',
         tagClass: 'tag-vendor',
         isRss: true,
       },
@@ -175,7 +184,7 @@ const SOURCE_QUALITY_WEIGHTS = {
   'GitHub Trending AI': 1.2,
   'GitHub Trending AI (JS)': 1.1,
   // 厂商分区（官方来源权重更高）
-  'Anthropic Blog': 1.5,
+
   'OpenAI Blog': 1.5,
   'Google AI Blog': 1.3,
   // 前沿技术分区
@@ -878,9 +887,9 @@ function generateArticleCard(article, isFeatured = false) {
       const urlObj = new URL(article.url);
       const logoName = urlObj.hostname.replace('www.', '').replace('.com', '');
       const KNOWN_LOGOS = {
-        'openai.com':    'https://openai.com/content/images/logos/openai-glyph-logo.svg',
-        'anthropic.com': 'https://www.anthropic.com/images/logo/anthropic-logo.svg',
-        'google.com':    'https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png',
+        'openai.com':         'https://openai.com/content/images/logos/openai-glyph-logo.svg',
+        'google.com':         'https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png',
+        'blogs.microsoft.com': 'https://img.logo.dev/blogs.microsoft.com.png?size=256',
       };
       vendorLogoUrl = KNOWN_LOGOS[urlObj.hostname] || null;
       if (!imageUrl) {
