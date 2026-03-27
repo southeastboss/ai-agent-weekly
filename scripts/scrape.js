@@ -388,8 +388,24 @@ function assignArticlesToSections(articles) {
   const result = [];
   for (const section of CONFIG.sections) {
     const pool = sectionPools[section.id] || [];
-    const selected = pool.slice(0, section.quota);
-    console.log(`   📊 分区 "${section.id}" 得分前${selected.length}条（共${pool.length}条候选）`);
+
+    let selected;
+    if (section.id === 'vendor') {
+      // 厂商分区：每个厂商最多 1 篇，确保多样性
+      const seenVendors = new Set();
+      selected = [];
+      for (const article of pool) {
+        if (!seenVendors.has(article._sourceName)) {
+          seenVendors.add(article._sourceName);
+          selected.push(article);
+          if (selected.length >= section.quota) break;
+        }
+      }
+      console.log(`   📊 分区 "${section.id}" 选取 ${selected.length} 篇（共${pool.length}条候选，来自 ${seenVendors.size} 个厂商）`);
+    } else {
+      selected = pool.slice(0, section.quota);
+      console.log(`   📊 分区 "${section.id}" 得分前${selected.length}条（共${pool.length}条候选）`);
+    }
     result.push(...selected);
   }
 
