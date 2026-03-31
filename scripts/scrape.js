@@ -353,22 +353,13 @@ function titleSimilarity(a, b) {
 function filterArticles(articles) {
   const seen = [];
   return articles.filter(article => {
-    // 1. 硬性日期过滤：排除超过 3 天的文章
-    if (article.date) {
-      const daysAgo = (Date.now() - new Date(article.date).getTime()) / (1000 * 60 * 60 * 24);
-      if (daysAgo > 3) {
-        console.log(`   🚫 过滤过期文章 (>3天): ${article.title.substring(0, 50)} [${article.date}]`);
-        return false;
-      }
-    }
-
-    // 2. 低质量过滤
+    // 1. 低质量过滤
     if (isLowQuality(article)) {
       console.log(`   🚫 过滤低质量: ${article.title.substring(0, 50)}`);
       return false;
     }
 
-    // 3. 重复主题过滤（标题相似度 > 0.6 视为重复）
+    // 2. 重复主题过滤（标题相似度 > 0.6 视为重复）
     for (const existing of seen) {
       if (titleSimilarity(existing.title, article.title) > 0.6) {
         console.log(`   🔁 过滤重复: "${article.title.substring(0, 40)}" ~ "${existing.title.substring(0, 40)}"`);
@@ -381,6 +372,15 @@ function filterArticles(articles) {
   });
 }
 
+/**
+ * 判断文章是否超过 3 天（用于选取时的日期过滤）
+ */
+function isArticleTooOld(article) {
+  if (!article.date) return false;
+  const daysAgo = (Date.now() - new Date(article.date).getTime()) / (1000 * 60 * 60 * 24);
+  return daysAgo > 3;
+}
+
 // ─── Chunk 3: 按分区分配文章（替换 naive sequential slicing）───────────────
 function assignArticlesToSections(articles) {
   // 按 sourceCategory 建立分区池
@@ -389,8 +389,12 @@ function assignArticlesToSections(articles) {
     sectionPools[section.id] = [];
   }
 
-  // 分配文章到对应分区池
+  // 分配文章到对应分区池，同时在入池时过滤超过3天的文章
   for (const article of articles) {
+    if (isArticleTooOld(article)) {
+      console.log(`   🚫 过滤过期文章 (>3天): ${article.title.substring(0, 50)} [${article.date}]`);
+      continue;
+    }
     const sectionId = article.sourceCategory || 'frontier';
     if (sectionPools[sectionId]) {
       sectionPools[sectionId].push(article);
