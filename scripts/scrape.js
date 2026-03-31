@@ -403,18 +403,35 @@ function assignArticlesToSections(articles) {
     }
   }
 
-  // 每个分区内部按评分排序
-  for (const sectionId of Object.keys(sectionPools)) {
-    sectionPools[sectionId].sort((a, b) => scoreArticle(b) - scoreArticle(a));
-  }
-
   // 从每个分区取 top quota 条（仅从本区池选取，不跨区补足）
   const result = [];
 
   for (const section of CONFIG.sections) {
     const pool = sectionPools[section.id] || [];
-    const selected = pool.slice(0, section.quota);
-    console.log(`   📊 分区 "${section.id}" 选取 ${selected.length} 篇（共${pool.length}条候选）`);
+
+    let selected;
+    if (section.id === 'vendor') {
+      // 厂商分区：先按来源去重（每个厂商最多 1 篇），再随机选 3 篇
+      const seenVendors = new Set();
+      const deduped = [];
+      for (const article of pool) {
+        if (!seenVendors.has(article._sourceName)) {
+          seenVendors.add(article._sourceName);
+          deduped.push(article);
+        }
+      }
+      //  Fisher-Yates 随机打乱，再取前 quota 条
+      for (let i = deduped.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [deduped[i], deduped[j]] = [deduped[j], deduped[i]];
+      }
+      selected = deduped.slice(0, section.quota);
+      console.log(`   📊 分区 "${section.id}" 随机选取 ${selected.length} 篇（共${pool.length}条候选，来自 ${seenVendors.size} 个厂商）`);
+    } else {
+      // 其他分区：按评分取 top quota
+      selected = pool.slice(0, section.quota);
+      console.log(`   📊 分区 "${section.id}" 得分前 ${selected.length} 篇（共${pool.length}条候选）`);
+    }
     result.push(...selected);
   }
 
