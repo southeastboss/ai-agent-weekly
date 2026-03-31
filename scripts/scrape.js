@@ -353,13 +353,22 @@ function titleSimilarity(a, b) {
 function filterArticles(articles) {
   const seen = [];
   return articles.filter(article => {
-    // 1. 低质量过滤
+    // 1. 硬性日期过滤：排除超过 3 天的文章
+    if (article.date) {
+      const daysAgo = (Date.now() - new Date(article.date).getTime()) / (1000 * 60 * 60 * 24);
+      if (daysAgo > 3) {
+        console.log(`   🚫 过滤过期文章 (>3天): ${article.title.substring(0, 50)} [${article.date}]`);
+        return false;
+      }
+    }
+
+    // 2. 低质量过滤
     if (isLowQuality(article)) {
       console.log(`   🚫 过滤低质量: ${article.title.substring(0, 50)}`);
       return false;
     }
 
-    // 2. 重复主题过滤（标题相似度 > 0.6 视为重复）
+    // 3. 重复主题过滤（标题相似度 > 0.6 视为重复）
     for (const existing of seen) {
       if (titleSimilarity(existing.title, article.title) > 0.6) {
         console.log(`   🔁 过滤重复: "${article.title.substring(0, 40)}" ~ "${existing.title.substring(0, 40)}"`);
