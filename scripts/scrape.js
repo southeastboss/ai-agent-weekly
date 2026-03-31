@@ -408,38 +408,12 @@ function assignArticlesToSections(articles) {
     sectionPools[sectionId].sort((a, b) => scoreArticle(b) - scoreArticle(a));
   }
 
-  // 构建全局候选池（所有未选取文章，按评分排序）
-  const allArticles = Object.values(sectionPools).flat()
-    .sort((a, b) => scoreArticle(b) - scoreArticle(a));
-
-  // 从每个分区取 top quota 条，不够时从全局候选池补足
+  // 从每个分区取 top quota 条（仅从本区池选取，不跨区补足）
   const result = [];
-  const assignedUrls = new Set();
 
   for (const section of CONFIG.sections) {
     const pool = sectionPools[section.id] || [];
-
-    // 第一步：从本区池选取
-    const selected = [];
-    for (const article of pool) {
-      if (selected.length >= section.quota) break;
-      if (!assignedUrls.has(article.url)) {
-        selected.push(article);
-        assignedUrls.add(article.url);
-      }
-    }
-
-    // 第二步：本区不够 quota？从全局候选池补足（跨区补足）
-    if (selected.length < section.quota) {
-      for (const article of allArticles) {
-        if (selected.length >= section.quota) break;
-        if (!assignedUrls.has(article.url)) {
-          selected.push(article);
-          assignedUrls.add(article.url);
-        }
-      }
-    }
-
+    const selected = pool.slice(0, section.quota);
     console.log(`   📊 分区 "${section.id}" 选取 ${selected.length} 篇（共${pool.length}条候选）`);
     result.push(...selected);
   }
