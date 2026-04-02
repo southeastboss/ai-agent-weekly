@@ -16,6 +16,24 @@ const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
 
+// ─── Axios 响应拦截器：403 时主动抛出错误，触发 curl 回退 ─────────────────────
+axios.interceptors.response.use(
+  (response) => {
+    // 任何 4xx/5xx 状态码都视为失败，强制走 curl
+    if (response.status >= 400) {
+      const err = new Error(`HTTP ${response.status}`);
+      err.response = response;
+      err.isAxiosError = true;
+      throw err;
+    }
+    return response;
+  },
+  (error) => {
+    // 网络错误等也走 curl 回退
+    return Promise.reject(error);
+  }
+);
+
 // ─── 配置 ───────────────────────────────────────────────────────────────
 
 /**
