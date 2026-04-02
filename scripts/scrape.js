@@ -177,7 +177,7 @@ const CONFIG = {
   },
 
   // 每页最多文章数（从所有来源收集更多，确保 RSS 新文章能进入排序）
-  maxArticles: 9,
+  maxArticles: 15,
 
   // 输出路径
   outputFile: path.join(__dirname, '..', 'index.html'),

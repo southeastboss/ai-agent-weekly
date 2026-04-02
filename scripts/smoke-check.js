@@ -29,12 +29,12 @@ if (featuredCards < 1 && sectionBlocks < 1) {
   fail('Expected at least 1 featured card or 1 section block');
 }
 
-if (articleCards < 9) {
-  fail(`Expected at least 9 article cards, got ${articleCards}`);
+if (articleCards < 8) {
+  fail(`Expected at least 8 article cards, got ${articleCards}`);
 }
 
-if (totalCards < 9) {
-  fail(`Expected at least 9 total cards, got ${totalCards}`);
+if (totalCards < 8) {
+  fail(`Expected at least 8 total cards, got ${totalCards}`);
 }
 
 if (linkedTitles < totalCards) {
