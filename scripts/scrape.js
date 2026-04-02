@@ -213,18 +213,18 @@ const SOURCE_QUALITY_WEIGHTS = {
   'GitHub Trending AI': 1.2,
   'GitHub Trending AI (JS)': 1.1,
   // 厂商分区（官方来源权重更高）
-  'OpenAI Blog': 1.5,
-  'Google AI Blog': 1.3,
-  'AWS ML Blog': 1.3,
-  'Meta Engineering': 1.2,
+  'OpenAI Blog': 1.0,
+  'Google AI Blog': 1.0,
+  'AWS ML Blog': 1.0,
+  'Meta Engineering': 1.0,
   'Microsoft AI Blog': 1.0,
   // 前沿技术分区
+  'Hacker News': 1.0,
   'Hugging Face Blog': 1.4,
   'VentureBeat AI': 1.1,
   'TechCrunch AI': 1.0,
-  'AI and Us': 1.0,
-  'AI in Action': 1.0,
-  'Inside AI': 1.0,
+  'MIT Technology Review AI': 1.0,
+  'The Verge AI': 1.0,
 };
 
 // ─── Chunk 3: 根据内容关键词推断技术标签 ──────────────────────────────────
@@ -398,7 +398,8 @@ function filterArticles(articles) {
 function isArticleTooOld(article) {
   if (!article.date) return false;
   const daysAgo = (Date.now() - new Date(article.date).getTime()) / (1000 * 60 * 60 * 24);
-  return daysAgo > 3;
+  const maxAgeDays = article.sourceCategory === 'vendor' ? 7 : 3;
+  return daysAgo > maxAgeDays;
 }
 
 // ─── Chunk 3: 按分区分配文章（替换 naive sequential slicing）───────────────
@@ -866,19 +867,12 @@ async function enrichArticle(article) {
  * 厂商分区每天随机选3个，增加多样性
  */
 function getAllSources() {
-  // 每天随机选3个厂商（洗牌后取前3个）
   const vendorPool = [...CONFIG.sources.vendor];
-  // Fisher-Yates 洗牌
-  for (let i = vendorPool.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [vendorPool[i], vendorPool[j]] = [vendorPool[j], vendorPool[i]];
-  }
-  const selectedVendors = vendorPool.slice(0, 3);
-  console.log(`\n🎲 今日随机选取的厂商: ${selectedVendors.map(v => v.name).join(' / ')}`);
+  console.log(`\n🏢 本次全量使用的厂商源: ${vendorPool.map(v => v.name).join(' / ')}`);
 
   const allSources = [];
   for (const sectionId of Object.keys(CONFIG.sources)) {
-    const sources = sectionId === 'vendor' ? selectedVendors : CONFIG.sources[sectionId];
+    const sources = CONFIG.sources[sectionId];
     for (const source of sources) {
       allSources.push(source);
     }
@@ -1668,4 +1662,5 @@ module.exports = {
   assignArticlesToSections,
   CONFIG,
 };
+
 

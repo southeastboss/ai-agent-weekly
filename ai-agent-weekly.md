@@ -38,17 +38,19 @@
 ### 2.2 数据源与抓取逻辑
 
 当前抓取源包括：
-- `artificialintelligence-news.com` 分类页
-- TechCrunch AI RSS
-- VentureBeat AI RSS
-- Hugging Face Blog RSS
+- 开源项目：GitHub Trending（Python / JavaScript）
+- 厂商动态：OpenAI Blog / Google AI Blog / AWS ML Blog / Meta Engineering / Microsoft AI Blog
+- 前沿技术：Hacker News / TechCrunch AI / VentureBeat AI / Hugging Face Blog / MIT Technology Review AI / The Verge AI
 
 已实现：
-- 分类页抓取
 - RSS 抓取
+- GitHub Trending 抓取
 - axios 失败时自动回退到 curl
 - 去重逻辑（基于 URL）
 - 页面级 enrich（补充标题、摘要、图片、日期）
+- vendor 分区改为全量使用 5 个厂商源
+- vendor 分区时间窗口放宽到 7 天
+- vendor 厂商权重统一为相同分值
 
 ---
 

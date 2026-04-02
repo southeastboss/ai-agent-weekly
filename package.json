@@ -7,7 +7,7 @@
     "scrape": "node scripts/scrape.js",
     "smoke-check": "node scripts/smoke-check.js",
     "preview": "node scripts/scrape.js && node scripts/smoke-check.js && echo 'HTML generated, open index.html in browser'",
-    "test": "node --test tests/workflow-smoke.test.js tests/beijing-timezone.test.js tests/thumbnail-fallback.test.js"
+    "test": "node --test tests/workflow-smoke.test.js tests/beijing-timezone.test.js tests/thumbnail-fallback.test.js tests/vendor-policy.test.js"
   },
   "keywords": ["ai-agent", "news", "github-actions", "puppeteer"],
   "author": "",
