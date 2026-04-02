@@ -124,29 +124,7 @@ const CONFIG = {
     ],
 
     'frontier': [
-      // 分类页来源
-      {
-        name: 'AI and Us',
-        url: 'https://www.artificialintelligence-news.com/categories/ai-and-us/',
-        sectionId: 'frontier',
-        tag: '多智能体',
-        tagClass: 'tag-agent',
-      },
-      {
-        name: 'AI in Action',
-        url: 'https://www.artificialintelligence-news.com/categories/ai-in-action/',
-        sectionId: 'frontier',
-        tag: '自动化',
-        tagClass: 'tag-automation',
-      },
-      {
-        name: 'Inside AI',
-        url: 'https://www.artificialintelligence-news.com/categories/inside-ai/',
-        sectionId: 'frontier',
-        tag: 'Agent',
-        tagClass: 'tag-agent',
-      },
-      // RSS Feed 来源
+      // RSS Feed 来源（优先，避免被反爬封禁）
       {
         name: 'TechCrunch AI',
         url: 'https://techcrunch.com/category/artificial-intelligence/feed/',
@@ -166,6 +144,22 @@ const CONFIG = {
       {
         name: 'Hugging Face Blog',
         url: 'https://huggingface.co/blog/feed.xml',
+        sectionId: 'frontier',
+        tag: 'AI',
+        tagClass: 'tag-agent',
+        isRss: true,
+      },
+      {
+        name: 'MIT Technology Review AI',
+        url: 'https://www.technologyreview.com/feed/',
+        sectionId: 'frontier',
+        tag: 'AI',
+        tagClass: 'tag-agent',
+        isRss: true,
+      },
+      {
+        name: 'The Verge AI',
+        url: 'https://www.theverge.com/rss/ai-artificial-intelligence/index.xml',
         sectionId: 'frontier',
         tag: 'AI',
         tagClass: 'tag-agent',
