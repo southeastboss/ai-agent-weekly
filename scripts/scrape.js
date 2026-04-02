@@ -126,6 +126,14 @@ const CONFIG = {
     'frontier': [
       // RSS Feed 来源（优先，避免被反爬封禁）
       {
+        name: 'Hacker News',
+        url: 'https://news.ycombinator.com/rss',
+        sectionId: 'frontier',
+        tag: 'AI',
+        tagClass: 'tag-agent',
+        isRss: true,
+      },
+      {
         name: 'TechCrunch AI',
         url: 'https://techcrunch.com/category/artificial-intelligence/feed/',
         sectionId: 'frontier',
