@@ -316,6 +316,30 @@ const AD_KEYWORDS = ['newsletter', 'sponsored', 'advertisement', 'advert', 'news
 const PR_PATTERNS = [/^pr[:\s]/i, /^\[pr\]/i, /robot[\s-]?generated/i, /automated[\s-]?post/i, /爬虫/i, /^auto[\s-]?post/i];
 const LOW_QUALITY_PATTERNS = [/^click here/i, /^read more/i, /^learn more/i, /^\s*$/];
 
+// ─── 前沿技术分区：AI 相关性关键词（用于过滤非 AI 内容）───────────────────
+const AI_KEYWORDS = [
+  'ai', 'artificial intelligence', 'machine learning', 'ml', 'deep learning',
+  'neural network', 'llm', 'large language model', 'gpt', 'claude', 'gemini',
+  'chatgpt', 'openai', 'anthropic', 'google deepmind', 'meta ai', 'microsoft ai',
+  'agent', 'agentic', 'multi-agent', 'multiagent', 'rag', 'retrieval-augmented',
+  'embedding', 'vector', 'transformer', 'diffusion', 'stable diffusion',
+  'hugging face', 'langchain', 'llam', 'mistral', 'groq', 'ollama',
+  'autonomous', 'robotics', '具身智能', 'embodied ai', 'vision model',
+  'text-to-image', 'image generation', 'video generation', 'speech',
+  'benchmark', 'arxiv', 'research', 'model release', 'gpt-',
+  'inference', 'fine-tuning', 'finetune', 'alignment', 'safety',
+  'pixel', 'open source', 'open-source',
+];
+
+/**
+ * 检查文章内容是否与 AI 相关（用于前沿技术分区）
+ * 标题或描述中必须包含至少一个 AI 关键词
+ */
+function isAIRelated(article) {
+  const text = `${article.title} ${article.description}`.toLowerCase();
+  return AI_KEYWORDS.some(kw => text.includes(kw));
+}
+
 // challenge / WAF / 反爬拦截页面标题特征（命中这些说明拿到的不是真实文章页）
 const CHALLENGE_TITLE_PATTERNS = [
   /just a moment/i,
@@ -379,7 +403,13 @@ function filterArticles(articles) {
       return false;
     }
 
-    // 2. 重复主题过滤（标题相似度 > 0.6 视为重复）
+    // 2. 前沿技术分区：必须与 AI 相关（过滤 NASA 火箭、DRAM 硬件等非 AI 内容）
+    if (article.sourceCategory === 'frontier' && !isAIRelated(article)) {
+      console.log(`   🚫 过滤非AI内容(前沿技术): ${article.title.substring(0, 50)}`);
+      return false;
+    }
+
+    // 3. 重复主题过滤（标题相似度 > 0.6 视为重复）
     for (const existing of seen) {
       if (titleSimilarity(existing.title, article.title) > 0.6) {
         console.log(`   🔁 过滤重复: "${article.title.substring(0, 40)}" ~ "${existing.title.substring(0, 40)}"`);
