@@ -124,15 +124,8 @@ const CONFIG = {
     ],
 
     'frontier': [
-      // RSS Feed 来源（优先，避免被反爬封禁）
-      {
-        name: 'Hacker News',
-        url: 'https://news.ycombinator.com/rss',
-        sectionId: 'frontier',
-        tag: 'AI',
-        tagClass: 'tag-agent',
-        isRss: true,
-      },
+      // RSS Feed 来源（纯 AI / 技术媒体）
+      // 注意：已移除 Hacker News（综合科技新闻，AI 相关内容占比低）
       {
         name: 'TechCrunch AI',
         url: 'https://techcrunch.com/category/artificial-intelligence/feed/',
