@@ -386,6 +386,22 @@ GitHub Actions workflow 里曾经有个 "Download vendor logos" 步骤，该步�
 ### 待完成（Chunk 3）
 - 来源可用性监控与回退机制（更完善的来源失败处理）
 
+### ✅ 已修复（2026-04-10）：前沿技术分区非 AI 内容过滤
+
+**问题**：
+前沿技术分区使用 Hacker News RSS（综合性科技新闻），会混入 NASA 火箭发射、DRAM 硬件评测等与 AI 无关的内容，导致板块内容质量下降。
+
+**解决**：
+在 `filterArticles()` 中新增 `isAIRelated()` 检查，对前沿技术分区文章强制验证 AI 相关性：
+- 标题或描述必须包含至少一个 AI 关键词（llm、agent、machine learning、transformer、rag、embedding、robotics 等 30+ 术语）
+- 不满足条件的文章直接过滤
+- 关键词库覆盖：llm、gpt、claude、gemini、agent、rag、embedding、transformer、autonomous、robotics、具身智能、arxiv、alignment 等
+
+**效果**：
+- NASA Artemis II 发射报道 → 过滤 ✅
+- DRAM 硬件评测 → 过滤 ✅
+- 真正的 AI 前沿研究（如新的模型发布、Agent 突破、学术成果）→ 保留 ✅
+
 ## 6. 后续改进计划
 
 下面按优先级划分。
