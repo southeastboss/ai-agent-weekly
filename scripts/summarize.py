@@ -14,8 +14,8 @@ import json
 import urllib.request
 
 
-API_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions"
-MODEL = "qwen-plus"
+API_URL = "https://open.bigmodel.cn/api/paas/v4/chat/completions"
+MODEL = "glm-5"
 
 
 def generate_summary(title: str, description: str, max_chars: int = 200) -> str:
