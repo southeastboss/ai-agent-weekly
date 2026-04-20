@@ -10,8 +10,8 @@ import re
 import sys
 import urllib.request
 
-API_URL = "https://api.minimaxi.com/v1/chat/completions"
-MODEL = "MiniMax-M2.5-highspeed"
+API_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions"
+MODEL = "qwen-plus"
 PROMPT_PREFIX = "为以下内容写100-200字中文摘要："
 
 

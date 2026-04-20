@@ -14,8 +14,8 @@ import json
 import urllib.request
 
 
-API_URL = "https://api.minimaxi.com/v1/chat/completions"
-MODEL = "MiniMax-M2.5-highspeed"
+API_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions"
+MODEL = "qwen-plus"
 
 
 def generate_summary(title: str, description: str, max_chars: int = 200) -> str:
